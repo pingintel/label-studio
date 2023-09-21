@@ -1,6 +1,6 @@
 {
-  "message": "fix: LSDV-5256: Stop automatically scrolling if current Paragraph is not on the screen",
-  "commit": "188fb81a6109ff12a0c259eb33ef9ad911dd5405",
+  "message": "Scheduled Label Studio Frontend sync",
+  "commit": "06fbda811337c7be172e6a32e1486a3f275bac48",
   "branch": "master",
-  "date": "2023/07/27 16:02:41"
+  "date": "2023/09/21 12:39:41"
 }
