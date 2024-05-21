@@ -175,11 +175,11 @@ In either case, to run the unit tests:
 cd label_studio
 
 # sqlite3
-DJANGO_DB=sqlite DJANGO_SETTINGS_MODULE=core.settings.label_studio pytest -vv
+DJANGO_DB=sqlite DJANGO_SETTINGS_MODULE=khan.settings.prod pytest -vv
 
 # postgres (assumes default postgres user,db,pass. Will not work in Docker
 # testing container without additional configuration)
-DJANGO_DB=default DJANGO_SETTINGS_MODULE=core.settings.label_studio pytest -vv
+DJANGO_DB=default DJANGO_SETTINGS_MODULE=khan.settings.prod pytest -vv
 ```
 
 

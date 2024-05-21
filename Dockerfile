@@ -22,7 +22,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     LS_DIR=/label-studio \
     PIP_CACHE_DIR=$HOME/.cache \
-    DJANGO_SETTINGS_MODULE=core.settings.label_studio \
+    DJANGO_SETTINGS_MODULE=khan.settings.prod \
     LABEL_STUDIO_BASE_DATA_DIR=/label-studio/data \
     OPT_DIR=/opt/heartex/instance-data/etc \
     SETUPTOOLS_USE_DISTUTILS=stdlib

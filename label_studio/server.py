@@ -1,5 +1,6 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
+
 import sys
 import logging
 import socket
@@ -36,7 +37,7 @@ DEFAULT_USERNAME = 'default_user@localhost'
 
 def _setup_env():
     sys.path.insert(0, LS_PATH)
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "label_studio.core.settings.label_studio")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "khan.settings.prod")
     application = get_wsgi_application()
 
 
@@ -111,6 +112,7 @@ def _create_project(title, user, label_config=None, sampling=None, description=N
 def _get_user_info(username):
     from users.models import User
     from users.serializers import UserSerializer
+
     if not username:
         username = DEFAULT_USERNAME
 
@@ -164,10 +166,10 @@ def _create_user(input_args, config):
 
         if token and len(token) > 5:
             from rest_framework.authtoken.models import Token
+
             Token.objects.filter(key=user.auth_token.key).update(key=token)
         elif token:
-            print(f"Token {token} is not applied to user {DEFAULT_USERNAME} "
-                  f"because it's empty or len(token) < 5")
+            print(f"Token {token} is not applied to user {DEFAULT_USERNAME} " f"because it's empty or len(token) < 5")
 
     except IntegrityError:
         print('User {} already exists'.format(username))
@@ -189,15 +191,19 @@ def _init(input_args, config):
 
     if user and input_args.project_name and not _project_exists(input_args.project_name):
         from projects.models import Project
-        sampling_map = {'sequential': Project.SEQUENCE, 'uniform': Project.UNIFORM,
-                        'prediction-score-min': Project.UNCERTAINTY}
+
+        sampling_map = {
+            'sequential': Project.SEQUENCE,
+            'uniform': Project.UNIFORM,
+            'prediction-score-min': Project.UNCERTAINTY,
+        }
         _create_project(
             title=input_args.project_name,
             user=user,
             label_config=input_args.label_config,
             description=input_args.project_desc,
             sampling=sampling_map.get(input_args.sampling, 'sequential'),
-            ml_backends=input_args.ml_backends
+            ml_backends=input_args.ml_backends,
         )
     elif input_args.project_name:
         print('Project "{0}" already exists'.format(input_args.project_name))
@@ -297,6 +303,7 @@ def main():
     _apply_database_migrations()
 
     from label_studio.core.utils.common import collect_versions
+
     versions = collect_versions()
 
     if input_args.command == 'reset_password':
@@ -309,6 +316,7 @@ def main():
 
     if input_args.command == 'calculate_stats_all_orgs':
         from tasks.functions import calculate_stats_all_orgs
+
         calculate_stats_all_orgs(input_args.from_scratch, redis=True)
         return
 
@@ -317,8 +325,10 @@ def main():
 
         try:
             filename = export_project(
-                input_args.project_id, input_args.export_format, input_args.export_path,
-                serializer_context=input_args.export_serializer_context
+                input_args.project_id,
+                input_args.export_format,
+                input_args.export_path,
+                serializer_context=input_args.export_serializer_context,
             )
         except Exception as e:
             logger.exception(f'Failed to export project: {e}')
@@ -330,6 +340,7 @@ def main():
     # print version
     if input_args.command == 'version' or input_args.version:
         from label_studio import __version__
+
         print('\nLabel Studio version:', __version__, '\n')
         print(json.dumps(versions, indent=4))
 
@@ -352,8 +363,12 @@ def main():
     elif input_args.command == 'start' and input_args.project_name != '.':
         from label_studio.core.old_ls_migration import migrate_existing_project
         from projects.models import Project
-        sampling_map = {'sequential': Project.SEQUENCE, 'uniform': Project.UNIFORM,
-                        'prediction-score-min': Project.UNCERTAINTY}
+
+        sampling_map = {
+            'sequential': Project.SEQUENCE,
+            'uniform': Project.UNIFORM,
+            'prediction-score-min': Project.UNCERTAINTY,
+        }
 
         if input_args.project_name and not _project_exists(input_args.project_name):
             migrated = False
@@ -376,12 +391,12 @@ def main():
                 migrated = True
 
                 print(
-                    Fore.LIGHTYELLOW_EX +
-                    '\n*** WARNING! ***\n'
+                    Fore.LIGHTYELLOW_EX
+                    + '\n*** WARNING! ***\n'
                     + f'Project {input_args.project_name} migrated to Label Studio Database\n'
                     + "YOU DON'T NEED THIS FOLDER ANYMORE"
-                    + '\n****************\n' +
-                    Fore.WHITE
+                    + '\n****************\n'
+                    + Fore.WHITE
                 )
             if not migrated:
                 print(
@@ -403,8 +418,9 @@ def main():
         cert_file = input_args.cert_file or config.get('cert')
         key_file = input_args.key_file or config.get('key')
         if cert_file or key_file:
-            logger.error("Label Studio doesn't support SSL web server with cert and key.\n"
-                         'Use nginx or other servers for it.')
+            logger.error(
+                "Label Studio doesn't support SSL web server with cert and key.\n" 'Use nginx or other servers for it.'
+            )
             return
 
         # internal port and internal host for server start
@@ -420,6 +436,7 @@ def main():
 
         # save selected port to global settings
         from django.conf import settings
+
         settings.INTERNAL_PORT = str(internal_port)
 
         # browser

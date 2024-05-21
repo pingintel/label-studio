@@ -5,12 +5,13 @@ import os
 import sys
 
 if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.label_studio')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'khan.settings.prod')
     # os.environ.setdefault('DEBUG', 'True')
     try:
         from django.core.management import execute_from_command_line
         from django.core.management.commands.runserver import Command as runserver
         from django.conf import settings
+
         runserver.default_port = settings.INTERNAL_PORT
 
     except ImportError as exc:

@@ -1,5 +1,6 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
+
 """
 Django Base settings for Label Studio.
 
@@ -154,7 +155,7 @@ DATABASES_ALL = {
 }
 DATABASES_ALL['default'] = DATABASES_ALL[DJANGO_DB_POSTGRESQL]
 DATABASES = {'default': DATABASES_ALL.get(get_env('DJANGO_DB', 'default'))}
-
+# print(DATABASES)
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 if get_bool_env('GOOGLE_LOGGING_ENABLED', False):
@@ -262,7 +263,10 @@ ALLOWED_HOSTS = ['*']
 
 # Auth modules
 AUTH_USER_MODEL = 'users.User'
-AUTHENTICATION_BACKENDS = ['rules.permissions.ObjectPermissionBackend', 'django.contrib.auth.backends.ModelBackend', ]
+AUTHENTICATION_BACKENDS = [
+    'rules.permissions.ObjectPermissionBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 USE_USERNAME_FOR_LOGIN = False
 
 DISABLE_SIGNUP_WITHOUT_LINK = get_bool_env('DISABLE_SIGNUP_WITHOUT_LINK', False)
@@ -331,18 +335,16 @@ SWAGGER_SETTINGS = {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header',
-            'description':
-                'The token (or API key) must be passed as a request header. '
-                'You can find your user token on the User Account page in Label Studio. Example: '
-                '<br><pre><code class="language-bash">'
-                'curl https://label-studio-host/api/projects -H "Authorization: Token [your-token]"'
-                '</code></pre>'
+            'description': 'The token (or API key) must be passed as a request header. '
+            'You can find your user token on the User Account page in Label Studio. Example: '
+            '<br><pre><code class="language-bash">'
+            'curl https://label-studio-host/api/projects -H "Authorization: Token [your-token]"'
+            '</code></pre>',
         }
     },
     'APIS_SORTER': 'alpha',
     'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'delete', 'patch'],
     'OPERATIONS_SORTER': 'alpha',
-
 }
 
 SENTRY_DSN = get_env('SENTRY_DSN', None)
