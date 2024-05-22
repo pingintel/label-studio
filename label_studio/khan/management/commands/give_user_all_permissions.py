@@ -36,6 +36,10 @@ def give_user_all_permissions(email):
     from khan.rbac.roles import Role
 
     user_role = UserRole.objects.filter(user=user).first()
+
+    if not user_role:
+        UserRole.objects.create(user=user)
+
     user_role.role = Role.LABELING_INFRA
     user_role.save()
 
