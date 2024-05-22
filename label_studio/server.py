@@ -37,7 +37,7 @@ DEFAULT_USERNAME = 'default_user@localhost'
 
 def _setup_env():
     sys.path.insert(0, LS_PATH)
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "khan.settings.prod")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "khan.settings.local")
     application = get_wsgi_application()
 
 
