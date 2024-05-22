@@ -159,7 +159,8 @@ def _create_user(input_args, config):
         password = getpass.getpass(f'User password for {username}: ')
 
     try:
-        user = User.objects.create_user(email=username, password=password)
+        user = User.objects.create_user(email=username)
+        user.set_password(password)
         user.is_staff = True
         user.is_superuser = True
         user.save()
@@ -182,6 +183,14 @@ def _create_user(input_args, config):
         org.add_user(user)
     user.active_organization = org
     user.save(update_fields=['active_organization'])
+
+    # Keeping this import here for nows
+    from khan.rbac.models import UserRole
+    from khan.rbac.roles import Role
+
+    user_role_object = UserRole.objects.get(user=user)
+    user_role_object.role = Role.LABELING_INFRA
+    user_role_object.save()
 
     return user
 
