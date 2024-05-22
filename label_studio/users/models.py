@@ -1,5 +1,6 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
+
 import datetime
 
 from django.utils import timezone
@@ -11,7 +12,8 @@ from django.utils.translation import gettext_lazy as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
-
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
 from organizations.models import OrganizationMember, Organization
 from users.functions import hash_upload
 from core.utils.common import load_func
@@ -19,7 +21,7 @@ from projects.models import Project
 
 YEAR_START = 1980
 YEAR_CHOICES = []
-for r in range(YEAR_START, (datetime.datetime.now().year+1)):
+for r in range(YEAR_START, (datetime.datetime.now().year + 1)):
     YEAR_CHOICES.append((r, r))
 
 year = models.IntegerField(_('year'), choices=YEAR_CHOICES, default=datetime.datetime.now().year)
@@ -61,8 +63,7 @@ class UserManager(BaseUserManager):
 
 
 class UserLastActivityMixin(models.Model):
-    last_activity = models.DateTimeField(
-        _('last activity'), default=timezone.now, editable=False)
+    last_activity = models.DateTimeField(_('last activity'), default=timezone.now, editable=False)
 
     def update_last_activity(self):
         self.last_activity = timezone.now()
@@ -82,6 +83,7 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
 
     Username and password are required. Other fields are optional.
     """
+
     username = models.CharField(_('username'), max_length=256)
     email = models.EmailField(_('email address'), unique=True, blank=True)
 
@@ -90,29 +92,26 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
     phone = models.CharField(_('phone'), max_length=256, blank=True)
     avatar = models.ImageField(upload_to=hash_upload, blank=True)
 
-    is_staff = models.BooleanField(_('staff status'), default=False,
-                                   help_text=_('Designates whether the user can log into this admin site.'))
+    is_staff = models.BooleanField(
+        _('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.')
+    )
 
-    is_active = models.BooleanField(_('active'), default=True,
-                                    help_text=_('Designates whether to treat this user as active. '
-                                                'Unselect this instead of deleting accounts.'))
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_('Designates whether to treat this user as active. ' 'Unselect this instead of deleting accounts.'),
+    )
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     activity_at = models.DateTimeField(_('last annotation activity'), auto_now=True)
 
     active_organization = models.ForeignKey(
-        'organizations.Organization',
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name='active_users'
+        'organizations.Organization', null=True, on_delete=models.SET_NULL, related_name='active_users'
     )
 
     allow_newsletters = models.BooleanField(
-        _('allow newsletters'),
-        null=True,
-        default=None,
-        help_text=_('Allow sending newsletters to user')
+        _('allow newsletters'), null=True, default=None, help_text=_('Allow sending newsletters to user')
     )
 
     objects = UserManager()
@@ -169,7 +168,7 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
             name = self.email
 
         return name
-        
+
     def get_full_name(self):
         """
         Return the first_name and the last_name for a given user with a space in between.
@@ -186,7 +185,7 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
         if token.exists():
             token.delete()
         return Token.objects.create(user=self)
-    
+
     def get_initials(self):
         initials = '?'
         if not self.first_name and not self.last_name:
@@ -198,6 +197,15 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
         elif self.first_name and self.last_name:
             initials = self.first_name[0:1] + self.last_name[0:1]
         return initials
+
+    def save(self, *args, **kwargs):
+        email_validator = EmailValidator()
+        try:
+            email_validator(self.email)
+        except ValidationError as e:
+            raise ValidationError(f"Invalid email: {e.message}")
+
+        super().save(*args, **kwargs)
 
 
 @receiver(post_save, sender=User)
