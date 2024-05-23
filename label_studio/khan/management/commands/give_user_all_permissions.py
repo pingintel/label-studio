@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 User = auth.get_user_model()
 
+# python manage.py give_user_all_permissions.py --email <email>
+
 
 def give_user_all_permissions(email):
     """Give a user all permissions of an organization, also set them as a superuser."""
@@ -31,6 +33,7 @@ def give_user_all_permissions(email):
         org.save()
 
     user.active_organization = org
+    user.save()
 
     from khan.rbac.models import UserRole
     from khan.rbac.roles import Role
@@ -45,7 +48,7 @@ def give_user_all_permissions(email):
 
     print(f"Role of user with email {email} is set to {Role.LABELING_INFRA.name}.")
 
-    return user
+    return None
 
 
 class Command(BaseCommand):
