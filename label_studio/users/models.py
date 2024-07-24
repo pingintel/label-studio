@@ -2,22 +2,25 @@
 """
 
 import datetime
+from typing import Optional
 
-from django.utils import timezone
+from core.feature_flags import flag_set
+from core.utils.common import load_func
+from core.utils.db import fast_first
 from django.conf import settings
-from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.utils.translation import gettext_lazy as _
-from django.dispatch import receiver
+from django.db import models
 from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from organizations.models import Organization
 from rest_framework.authtoken.models import Token
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 from organizations.models import OrganizationMember, Organization
 from users.functions import hash_upload
-from core.utils.common import load_func
-from projects.models import Project
 
 YEAR_START = 1980
 YEAR_CHOICES = []
@@ -67,7 +70,7 @@ class UserLastActivityMixin(models.Model):
 
     def update_last_activity(self):
         self.last_activity = timezone.now()
-        self.save(update_fields=["last_activity"])
+        self.save(update_fields=['last_activity'])
 
     class Meta:
         abstract = True
@@ -99,7 +102,7 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
     is_active = models.BooleanField(
         _('active'),
         default=True,
-        help_text=_('Designates whether to treat this user as active. ' 'Unselect this instead of deleting accounts.'),
+        help_text=_('Designates whether to treat this user as active. Unselect this instead of deleting accounts.'),
     )
 
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
@@ -151,8 +154,8 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
         return annotations.values_list('project').distinct().count()
 
     @property
-    def own_organization(self):
-        return Organization.objects.get(created_by=self)
+    def own_organization(self) -> Optional[Organization]:
+        return fast_first(Organization.objects.filter(created_by=self))
 
     @property
     def has_organization(self):
@@ -180,14 +183,16 @@ class User(UserMixin, AbstractBaseUser, PermissionsMixin, UserLastActivityMixin)
         """Return the short name for the user."""
         return self.first_name
 
-    def reset_token(self):
-        token = Token.objects.filter(user=self)
-        if token.exists():
-            token.delete()
+    def reset_token(self) -> Token:
+        Token.objects.filter(user=self).delete()
         return Token.objects.create(user=self)
 
-    def get_initials(self):
+    def get_initials(self, is_deleted=False):
         initials = '?'
+
+        if flag_set('fflag_feat_all_optic_114_soft_delete_for_churned_employees', user=self) and is_deleted:
+            return 'DU'
+
         if not self.first_name and not self.last_name:
             initials = self.email[0:2]
         elif self.first_name and not self.last_name:
