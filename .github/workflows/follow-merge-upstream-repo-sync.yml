@@ -16,11 +16,7 @@ concurrency:
 env:
   NODE: 18
   CACHE_NAME_PREFIX: v1
-<<<<<<< HEAD
-  STATIC_DIST: 'label_studio/frontend/dist'
-=======
   RELEASE_BRANCH_PREFIX: "ls-release/"
->>>>>>> upstream/develop
   DOCS_TARGET_DIR: "docs/source/tags/"
   BACKEND_BASE_BRANCH: 'develop'
   FRONTEND_BASE_BRANCH: 'master'
@@ -32,15 +28,6 @@ jobs:
       github.event.client_payload.event_action == 'merged'
     runs-on: ubuntu-latest
     steps:
-<<<<<<< HEAD
-      - uses: hmarr/debug-action@v2.1.0
-      - name: Configure git
-        shell: bash
-        run: |
-          set -xeuo pipefail
-          git config --global user.name 'khan-actions-bot'
-          git config --global user.email 'infrastructure-data@khanacademy.org'
-=======
       - uses: hmarr/debug-action@v3.0.0
 
       - name: Details
@@ -122,7 +109,6 @@ jobs:
               console.log('Branch found.');
               core.setOutput('name', branch.name);
             }
->>>>>>> upstream/develop
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -131,9 +117,6 @@ jobs:
           ref: ${{ env.BACKEND_BASE_BRANCH }}
           fetch-depth: 0
 
-<<<<<<< HEAD
-      - name: Checkout module
-=======
       - name: Checkout Actions Hub
         uses: actions/checkout@v4
         with:
@@ -162,7 +145,6 @@ jobs:
 
       - name: "Frontend: Checkout module"
         if: steps.details.outputs.copy_src_path
->>>>>>> upstream/develop
         uses: actions/checkout@v4
         with:
           repository: Khan/label-studio-frontend
@@ -227,99 +209,28 @@ jobs:
         with:
           node-version: "${{ env.NODE }}"
 
-<<<<<<< HEAD
-      - name: Upgrade Yarn
-        run: npm install -g yarn@1.22
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Configure yarn cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ env.CACHE_NAME_PREFIX }}-${{ runner.os }}-node-${{ env.NODE }}-${{ hashFiles('**/package.json') }}-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Print Yarn cache size
-        run: du -d 0 -h ${{ steps.yarn-cache-dir-path.outputs.dir }}
-
-      - name: Install dependencies
-        run: |
-          rm package-lock.json || true
-          yarn install
-        working-directory: tmp
-
-      - name: Build module
-        working-directory: tmp
-        env:
-          CI: false # on true webpack breaks on warnings, and we have them a lot
-          NODE_ENV: 'production'
-        run: |
-          yarn run build:module
-          branch="${{ env.FRONTEND_BASE_BRANCH }}"
-          cat << EOF > "build/static/version.json"
-          {
-            "message": "${{ github.event.client_payload.title }}",
-            "commit": "${{ github.event.client_payload.commit_sha }}",
-            "branch": "${branch}",
-            "date": "$(git log -1 --date=format:"%Y/%m/%d %T" --format="%ad" | cat)"
-          }
-          EOF
-
-      - name: "LSF Docs: Cache node modules"
-        uses: actions/cache@v3
-=======
       - name: "LSF Docs: Cache node modules"
         if: steps.details.outputs.build_lsf_docs
         uses: actions/cache@v4
->>>>>>> upstream/develop
         with:
           path: ~/.npm
           key: npm-${{ env.CACHE_NAME_PREFIX }}-${{ runner.os }}-node-${{ env.NODE }}-jsdoc-to-markdown
 
       - name: "LSF Docs: Install NPM deps"
-<<<<<<< HEAD
-=======
         if: steps.details.outputs.build_lsf_docs
->>>>>>> upstream/develop
         continue-on-error: true
         working-directory: tmp/scripts
         run: npm install -g jsdoc-to-markdown node-fetch
 
       - name: "LSF Docs: Build"
         id: lsf-docs-build
-<<<<<<< HEAD
-=======
         if: steps.details.outputs.build_lsf_docs
->>>>>>> upstream/develop
         continue-on-error: true
         working-directory: tmp/scripts
         run: NODE_PATH=$(npm root -g) node create-docs.js
 
-<<<<<<< HEAD
-      - name: Commit static
-        shell: bash
-        run: |
-          set -xeuo pipefail
-
-          module_dist="${{ env.STATIC_DIST }}/lsf"
-
-          rm -rf "${module_dist}"
-          mkdir -p "${module_dist}"
-          cp -r tmp/build/static/* "${module_dist}"
-
-          git add "${{ env.STATIC_DIST }}"
-          git status -s
-          git commit --allow-empty -m '[submodules] Build static Khan/label-studio-frontend from commit ${{ github.event.client_payload.commit_sha }} at ${{ github.event.client_payload.html_url }}' -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          git push origin HEAD
-
-      - name: "LSF Docs: Commit"
-        if: steps.lsf-docs-build.conclusion == 'success'
-=======
       - name: "LSF Docs: Commit and Push"
         if: steps.details.outputs.build_lsf_docs && steps.lsf-docs-build.conclusion == 'success'
->>>>>>> upstream/develop
         continue-on-error: true
         run: |
           set -xeuo pipefail
@@ -331,13 +242,6 @@ jobs:
           git add "${docs_target_dir}"
           git commit -m 'docs: LSF Update from commit ${{ github.event.client_payload.commit_sha }} at ${{ github.event.client_payload.html_url }}' -m 'Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           git push origin HEAD
-<<<<<<< HEAD
-      - name: Notify Slack on failure
-        if: failure()
-        uses: ./.github/actions/notify_slack
-        with:
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-=======
 
 
       - name: Find or Create PR
@@ -632,4 +536,3 @@ jobs:
               }
             }
           '
->>>>>>> upstream/develop
