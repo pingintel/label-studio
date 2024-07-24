@@ -2,6 +2,9 @@
 It inherits from the label-studio core base settings, and all khan's settings files should inherit from this.
 """
 from core.settings.base import *
+from core.utils.secret_key import generate_secret_key_if_missing
+
+SECRET_KEY = generate_secret_key_if_missing(BASE_DATA_DIR)
 
 # Make sure our custom django app is installed
 INSTALLED_APPS.extend([
@@ -23,7 +26,7 @@ DATABASES = {'default': DATABASES_ALL[DJANGO_DB_POSTGRESQL]}
 
 # IAP _should_ mean users never even see the login page, but on the off chance they do,
 # they shouldn't be able to create their own user accounts
-DISABLE_SIGNUP_WITHOUT_LINK = True
+DISABLE_SIGNUP_WITHOUT_LINK = False
 
 # IAP Audience used for IAP JWT validation
 IAP_AUDIENCE = get_env("IAP_AUDIENCE")

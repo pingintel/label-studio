@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 User = auth.get_user_model()
 
-# python manage.py give_user_all_permissions.py --email <email>
-
-
+# python manage.py give_user_all_permissions --email <email>
 def give_user_all_permissions(email):
     """Give a user all permissions of an organization, also set them as a superuser."""
 

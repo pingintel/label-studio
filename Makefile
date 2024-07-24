@@ -14,21 +14,32 @@ makemigrations-dev:
 shell-dev:
 	DJANGO_DB=sqlite LOG_DIR=tmp DEBUG=true LOG_LEVEL=DEBUG DJANGO_SETTINGS_MODULE=khan.settings.prod python label_studio/manage.py shell_plus
 
+docker-run-dev:
+	docker-compose up --build
+
+docker-migrate-dev:
+	docker-compose run app python3 /label-studio/label_studio/manage.py migrate
+
+
 # Install modules
 frontend-setup:
-	cd label_studio/frontend && yarn install --frozen-lockfile && yarn run download:all;
+	cd web && yarn install --frozen-lockfile;
 
-# Fetch DM and LSF
-frontend-fetch:
-	cd label_studio/frontend && yarn run download:all;
+# Keep it here for potential rollback
+## Fetch DM and LSF
+#frontend-fetch:
+#	cd label_studio/frontend && yarn run download:all;
 
 # Build frontend continuously on files changes
 frontend-watch:
-	cd label_studio/frontend && yarn start
+	cd web && yarn run watch
 
 # Build production-ready optimized bundle
-frontend-build:
-	cd label_studio/frontend && yarn install --frozen-lockfile && yarn run build:production
+frontend-build: frontend-setup
+	cd web && yarn run build
+
+frontend-storybook-serve: frontend-setup
+	cd web && yarn run ui:serve
 
 # Run tests
 test:
@@ -46,3 +57,27 @@ docker-testing-shell:
 # Update urls
 update-urls:
 	DJANGO_DB=sqlite LOG_DIR=tmp DEBUG=true LOG_LEVEL=DEBUG DJANGO_SETTINGS_MODULE=khan.settings.prod python label_studio/manage.py show_urls --format pretty-json > ./label_studio/core/all_urls.json
+
+# Format changed files on branch
+fmt:
+	pre-commit run --config .pre-commit-dev.yaml --hook-stage manual
+
+# Format all files in repo
+fmt-all:
+	pre-commit run --config .pre-commit-dev.yaml --hook-stage manual --all-files
+
+# Check for lint issues on this branch
+fmt-check:
+	pre-commit run --hook-stage pre-push
+
+# Check for lint issues in entire repo
+fmt-check-all:
+	pre-commit run --hook-stage pre-push --all-files
+
+# Configure pre-push hook using pre-commit
+configure-hooks:
+	pre-commit install --hook-type pre-push
+
+# Generate swagger.json
+generate-swagger:
+	DJANGO_DB=sqlite LOG_DIR=tmp DEBUG=true LOG_LEVEL=DEBUG DJANGO_SETTINGS_MODULE=khan.settings.prod python label_studio/manage.py generate_swagger swagger.json
