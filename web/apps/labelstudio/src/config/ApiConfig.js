@@ -10,6 +10,9 @@ export const API_CONFIG = {
     inviteLink: "/invite",
     resetInviteLink: "POST:/invite/reset-token",
 
+    // Permissions
+    updatePermission: "PATCH:/organizations/:pk/memberships/:user_pk/permission",
+
     // Project
     projects: "/projects",
     project: "/projects/:pk",
