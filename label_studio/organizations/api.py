@@ -11,6 +11,7 @@ from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from khan.rbac.models import UserRole
+from khan.rbac.roles import Role
 from organizations.models import Organization, OrganizationMember
 from organizations.serializers import (
     OrganizationIdSerializer,
@@ -221,7 +222,7 @@ class OrganizationMemberPermissionUpdateAPI(GetParentObjectMixin, generics.Updat
 
         user = get_object_or_404(User, pk=user_pk)
         member = get_object_or_404(OrganizationMember, user=user, organization=org)
-        if member.deleted_at is not None:
+        if member is None:
             raise NotFound('Member not found')
 
         if member.user_id == request.user.id:
@@ -233,6 +234,14 @@ class OrganizationMemberPermissionUpdateAPI(GetParentObjectMixin, generics.Updat
 
         if new_role is None:
             return Response({'detail': 'New role must be provided to update permissions.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            new_role = int(new_role)
+            if new_role not in [role.value for role in Role]:
+                raise ValueError
+        except (ValueError, TypeError):
+            return Response({'detail': 'Invalid role provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         user_role.role = new_role
         user_role.save()
