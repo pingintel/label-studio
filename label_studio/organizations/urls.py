@@ -25,6 +25,12 @@ _api_urlpattens = [
         api.OrganizationMemberDetailAPI.as_view(),
         name='organization-membership-detail',
     ),
+    # organization permission viewset
+    path( 
+        '<int:pk>/memberships/<int:user_pk>/permission',
+        api.OrganizationMemberPermissionUpdateAPI.as_view(),
+        name='organization-membership-permission',
+    ),
 ]
 # TODO: these urlpatterns should be moved in core/urls with include('organizations.urls')
 urlpatterns = [
