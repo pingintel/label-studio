@@ -57,7 +57,7 @@ const UserRow = ({ user, active, canEditRoles, onSelectUser }) => {
           <Select
             placeholder="Select a role"
             value={role}
-            disabled={changing}
+            disabled={changing || currUser.id === user.id}
             onChange={handleRoleChange}
             options={Array.from(Object.values(ROLES)).map(role => {
               return {
