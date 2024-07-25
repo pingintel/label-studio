@@ -1,16 +1,24 @@
 import { formatDistance } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
-import { Pagination, Spinner, Userpic } from "../../../components";
-import { usePage, usePageSize } from "../../../components/Pagination/Pagination";
+import { Pagination, Spinner } from "../../../components";
+import {
+  usePage,
+  usePageSize
+} from "../../../components/Pagination/Pagination";
+import { Select } from "../../../components/Form";
 import { useAPI } from "../../../providers/ApiProvider";
 import { Block, Elem } from "../../../utils/bem";
 import { isDefined } from "../../../utils/helpers";
 import { useUpdateEffect } from "../../../utils/hooks";
+
 import "./PeopleList.styl";
-import { CopyableTooltip } from "../../../components/CopyableTooltip/CopyableTooltip";
+import UserRow from "./UserRow";
+import { useCurrentUser } from "apps/labelstudio/src/providers/CurrentUser";
+import { ROLES } from "apps/labelstudio/src/utils/roles";
 
 export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
   const api = useAPI();
+  const { user: currUser } = useCurrentUser();
   const [usersList, setUsersList] = useState();
   const [currentPage] = usePage("page", 1);
   const [currentPageSize] = usePageSize("page_size", 30);
@@ -24,8 +32,8 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
         pk: 1,
         contributed_to_projects: 1,
         page,
-        page_size: pageSize,
-      },
+        page_size: pageSize
+      }
     });
 
     if (response.results) {
@@ -35,14 +43,14 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
   }, []);
 
   const selectUser = useCallback(
-    (user) => {
+    user => {
       if (selectedUser?.id === user.id) {
         onSelect?.(null);
       } else {
         onSelect?.(user);
       }
     },
-    [selectedUser],
+    [selectedUser]
   );
 
   useEffect(() => {
@@ -51,7 +59,9 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
 
   useEffect(() => {
     if (isDefined(defaultSelected) && usersList) {
-      const selected = usersList.find(({ user }) => user.id === Number(defaultSelected));
+      const selected = usersList.find(
+        ({ user }) => user.id === Number(defaultSelected)
+      );
 
       if (selected) selectUser(selected.user);
     }
@@ -74,28 +84,22 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
                 <Elem name="column" mix="last-activity">
                   Last Activity
                 </Elem>
+                {currUser && currUser.user_role >= ROLES.LABELING_INFRA && (
+                  <Elem name="column" mix="role">
+                    Role
+                  </Elem>
+                )}
               </Elem>
               <Elem name="body">
                 {usersList.map(({ user }) => {
                   const active = user.id === selectedUser?.id;
-
                   return (
-                    <Elem key={`user-${user.id}`} name="user" mod={{ active }} onClick={() => selectUser(user)}>
-                      <Elem name="field" mix="avatar">
-                        <CopyableTooltip title={`User ID: ${user.id}`} textForCopy={user.id}>
-                          <Userpic user={user} style={{ width: 28, height: 28 }} />
-                        </CopyableTooltip>
-                      </Elem>
-                      <Elem name="field" mix="email">
-                        {user.email}
-                      </Elem>
-                      <Elem name="field" mix="name">
-                        {user.first_name} {user.last_name}
-                      </Elem>
-                      <Elem name="field" mix="last-activity">
-                        {formatDistance(new Date(user.last_activity), new Date(), { addSuffix: true })}
-                      </Elem>
-                    </Elem>
+                    <UserRow
+                      key={`user-${user.id}`}
+                      user={user}
+                      active={active}
+                      onSelectUser={user => selectUser(user)}
+                    />
                   );
                 })}
               </Elem>

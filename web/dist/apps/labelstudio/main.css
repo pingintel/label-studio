@@ -7601,6 +7601,23 @@ body {
 .ls-people-list__column.ls-last-activity {
   width: 160px;
 }
+.ls-people-list__column.ls-role {
+  width: 160px;
+  display: flex;
+  justify-content: center;
+}
+.ls-people-list__field.ls-role {
+  width: 160px;
+  display: flex;
+  justify-content: center;
+}
+.ls-people-list__field.ls-role .ls-select {
+  width: 100% /* Ensure the div also adjusts */;
+}
+.ls-people-list__field.ls-role .ls-select__list:focus {
+  border: none;
+  box-shadow: none;
+}
 .ls-people-list__user {
   cursor: pointer;
   display: flex;
@@ -7691,7 +7708,7 @@ body {
 }
 .ls-people__content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 65% 35%;
   grid-template-rows: min-content;
   align-items: flex-start;
   grid-gap: 20px;
