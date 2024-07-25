@@ -8,7 +8,7 @@ import { getRoleName, ROLES } from "apps/labelstudio/src/utils/roles";
 import { useAPI } from "apps/labelstudio/src/providers/ApiProvider";
 import { useCurrentUser } from "apps/labelstudio/src/providers/CurrentUser";
 
-const UserRow = ({ user, active, canEditRoles, onSelectUser }) => {
+const UserRow = ({ user, active, isOwner, onSelectUser }) => {
   const [role, setRole] = useState(user.user_role);
   const [changing, setChanging] = useState(false);
   const { user: currUser } = useCurrentUser();
@@ -34,6 +34,8 @@ const UserRow = ({ user, active, canEditRoles, onSelectUser }) => {
     setChanging(false);
   };
 
+  const roleChangeDisabled = changing || currUser.id === user.id || isOwner;
+
   return (
     <Elem name="user" mod={{ active }} onClick={() => onSelectUser(user)}>
       <Elem name="field" mix="avatar">
@@ -57,7 +59,7 @@ const UserRow = ({ user, active, canEditRoles, onSelectUser }) => {
           <Select
             placeholder="Select a role"
             value={role}
-            disabled={changing || currUser.id === user.id}
+            disabled={roleChangeDisabled}
             onChange={handleRoleChange}
             options={Array.from(Object.values(ROLES)).map(role => {
               return {

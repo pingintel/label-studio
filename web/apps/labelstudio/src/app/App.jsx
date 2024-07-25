@@ -24,6 +24,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import { RootPage } from "./RootPage";
 import { FF_OPTIC_2, isFF } from "../utils/feature-flags";
 import { ToastProvider, ToastViewport } from "../components/Toast/Toast";
+import { OrganizationProvider } from "../providers/OrganizationProvider";
 
 const baseURL = new URL(APP_SETTINGS.hostname || location.origin);
 
@@ -66,6 +67,7 @@ const App = ({ content }) => {
             <ConfigProvider key="config" />,
             <LibraryProvider key="lsf" libraries={libraries} />,
             <RoutesProvider key="rotes" />,
+            <OrganizationProvider key="organization" />,
             <ProjectProvider key="project" />,
             <ToastProvider key="toast" />,
             <CurrentUserProvider key="current-user" />

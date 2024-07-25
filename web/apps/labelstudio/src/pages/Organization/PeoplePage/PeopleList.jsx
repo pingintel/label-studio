@@ -15,10 +15,12 @@ import "./PeopleList.styl";
 import UserRow from "./UserRow";
 import { useCurrentUser } from "apps/labelstudio/src/providers/CurrentUser";
 import { ROLES } from "apps/labelstudio/src/utils/roles";
+import { useOrganization } from "apps/labelstudio/src/providers/OrganizationProvider";
 
 export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
   const api = useAPI();
   const { user: currUser } = useCurrentUser();
+  const { owner } = useOrganization();
   const [usersList, setUsersList] = useState();
   const [currentPage] = usePage("page", 1);
   const [currentPageSize] = usePageSize("page_size", 30);
@@ -98,6 +100,7 @@ export const PeopleList = ({ onSelect, selectedUser, defaultSelected }) => {
                       key={`user-${user.id}`}
                       user={user}
                       active={active}
+                      isOwner={user.id === owner}
                       onSelectUser={user => selectUser(user)}
                     />
                   );
