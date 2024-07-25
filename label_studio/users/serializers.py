@@ -4,6 +4,7 @@ from core.feature_flags import flag_set
 from core.utils.common import load_func
 from core.utils.db import fast_first
 from django.conf import settings
+from khan.rbac.models import UserRole
 from organizations.models import OrganizationMember
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
@@ -15,6 +16,7 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
     # short form for user presentation
     initials = serializers.SerializerMethodField(default='?', read_only=True)
     avatar = serializers.SerializerMethodField(read_only=True)
+    user_role = serializers.SerializerMethodField()
 
     def get_avatar(self, instance):
         return instance.avatar_url
@@ -54,6 +56,11 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
                 return True
         return bool(organization_member_for_user.deleted_at)
 
+    def get_user_role(self, instance):
+        # Fetch the user role and return its ID
+        user_role = UserRole.objects.filter(user=instance).first()
+        return user_role.role if user_role else None
+    
     def to_representation(self, instance):
         """Returns user with cache, this helps to avoid multiple s3/gcs links resolving for avatars"""
 
@@ -85,6 +92,7 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
             'phone',
             'active_organization',
             'allow_newsletters',
+            'user_role'
         )
 
 
