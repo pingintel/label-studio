@@ -276,7 +276,8 @@ class OrganizationAPI(generics.RetrieveUpdateAPIView):
 
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     queryset = Organization.objects.all()
-    permission_required = all_permissions.organizations_change
+    permission_required = ViewClassPermission(GET=all_permissions.organizations_view,
+    PATCH=all_permissions.organizations_change)
     serializer_class = OrganizationSerializer
 
     redirect_route = 'organizations-dashboard'
