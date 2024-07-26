@@ -11,7 +11,6 @@ import {
 import { debounce } from "../../../utils/debounce";
 import { Button, Spinner } from "../../../components";
 import AccessRow from "./AccessRow";
-import { useOrganization } from "apps/labelstudio/src/providers/OrganizationProvider";
 
 const SEARCH_DEBOUNCE_DELAY = 500;
 
@@ -19,7 +18,6 @@ export const AccessSettings = () => {
   // Hooks
   const api = useAPI();
   const params = useParams();
-  const { owner } = useOrganization();
 
   // Pagination
   const [currentPage] = usePage("page", 1);
@@ -29,6 +27,7 @@ export const AccessSettings = () => {
   const [usersList, setUsersList] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [search, setSearch] = useState("");
+  const [updating, setUpdating] = useState(false);
 
   const fetchUsers = useCallback(async (page, pageSize, search) => {
     const response = await api.callApi("projectMemberships", {
@@ -40,14 +39,32 @@ export const AccessSettings = () => {
       }
     });
 
+    console.log(response.results);
+
     if (response.results) {
       setUsersList(response.results);
       setTotalItems(response.count);
     }
   }, []);
 
+  const updateUsers = useCallback(async accessData => {
+    const response = await api.callApi("updateProjectMembership", {
+      params: {
+        pk: params.id
+      },
+      body: accessData
+    });
+
+    console.log(response);
+
+    return response;
+  }, []);
+
   const debouncedFetchUsers = useCallback(
-    debounce(search => fetchUsers(1, 10, search), SEARCH_DEBOUNCE_DELAY),
+    debounce(
+      search => fetchUsers(1, currentPageSize, search),
+      SEARCH_DEBOUNCE_DELAY
+    ),
     [fetchUsers]
   );
 
@@ -67,9 +84,14 @@ export const AccessSettings = () => {
     fetchUsers(currentPage, currentPageSize, search);
   }, []);
 
-  const handleSaveAccess = () => {
+  const handleSaveAccess = async () => {
     console.log(selectedUsers);
-  };
+    setUpdating(true);
+    const new_users = await updateUsers(selectedUsers);
+    setSelectedUsers([]);
+    setUsersList(new_users);
+    setUpdating(false);
+  }
 
   const handleUserSelected = userData => {
     setSelectedUsers(prev => {
@@ -115,20 +137,17 @@ export const AccessSettings = () => {
                     <Elem name="body">
                       {usersList
                         .sort((a, b) => {
-                          if (a.user.id === owner) return -1;
-                          if (b.user.id === owner) return 1;
-
-                          if (a.enabled && !b.enabled) return -1;
-                          if (!a.enabled && b.enabled) return 1;
+                          if (a.enabled && !b.enabled) return 1;
+                          if (!a.enabled && b.enabled) return -1;
 
                           return 0;
                         })
                         .map(({ user, enabled }) => {
                           return (
                             <AccessRow
+                              key={user.id}
                               user={user}
                               initialValue={enabled}
-                              isOwner={owner === user.id}
                               onUserSelected={handleUserSelected}
                             />
                           );

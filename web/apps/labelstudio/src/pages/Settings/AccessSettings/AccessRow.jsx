@@ -5,9 +5,10 @@ import { Block, cn, Elem } from "../../../utils/bem";
 import { useCurrentUser } from "apps/labelstudio/src/providers/CurrentUser";
 import { ROLES } from "apps/labelstudio/src/utils/roles";
 
-const AccessRow = ({ user, initialValue, isOwner, onUserSelected }) => {
+const AccessRow = ({ user, initialValue, onUserSelected }) => {
   const [checked, setChecked] = useState(initialValue ?? false);
   const { user: currUser } = useCurrentUser();
+
   return (
     <Elem name="user">
       <Elem name="field" mix="avatar">
@@ -19,9 +20,7 @@ const AccessRow = ({ user, initialValue, isOwner, onUserSelected }) => {
         {user.email}
       </Elem>
       <Elem name="field" mix="access">
-        {isOwner ? (
-          <p>Owner</p>
-        ) : currUser.user_role >= ROLES.LABELING_INFRA ? (
+        {currUser.user_role >= ROLES.LABELING_INFRA ? (
           <Checkbox
             checked={checked}
             onChange={e => {

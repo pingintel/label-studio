@@ -7235,6 +7235,144 @@ body {
   --primary_link: #566fcf;
   --danger_color: var(--red_7);
 }
+.ls-access-list {
+  width: 100%;
+  font-size: 16px;
+}
+.ls-access-list__wrapper {
+  border-radius: 4px;
+  border: 1px solid var(--sand_300);
+  background: var(--sand_0);
+}
+.ls-access-list__loading {
+  width: 100%;
+  display: flex;
+  min-height: 250px;
+  justify-content: center;
+  align-items: center;
+}
+.ls-access-list__users {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.ls-access-list__header {
+  font-weight: 500;
+  display: flex;
+}
+.ls-access-list__column,
+.ls-access-list__field {
+  z-index: 2;
+  height: 48px;
+  padding: 0 10px;
+  border: none;
+  color: #000;
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.ls-access-list__column {
+  font-weight: 500;
+  background: none;
+}
+.ls-access-list__field.ls-avatar,
+.ls-access-list__column.ls-avatar {
+  width: 28px;
+  box-sizing: content-box;
+}
+.ls-access-list__field.ls-email,
+.ls-access-list__column.ls-email {
+  flex: 1;
+}
+.ls-access-list__column.ls-access {
+  width: 160px;
+  display: flex;
+  justify-content: center;
+}
+.ls-access-list__field.ls-access {
+  width: 160px;
+  display: flex;
+  justify-content: center;
+}
+.ls-access-list__field.ls-access .ls-select {
+  width: 100% /* Ensure the div also adjusts */;
+}
+.ls-access-list__field.ls-access .ls-select__list:focus {
+  border: none;
+  box-shadow: none;
+}
+.ls-access-list__user {
+  display: flex;
+}
+.ls-access-list__user:nth-child(odd):not(.ls-access-list__user_active) {
+  background-color: var(--sand_100);
+}
+.ls-div-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ls-search-bar-wrapper {
+  display: flex;
+  gap: 20px;
+}
+.ls-input {
+  flex: 1;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("/static/fonts/Figtree-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Figtree";
+  src: url("/static/fonts/Figtree-SemiBold.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+body {
+  font-family: 'Figtree', sans-serif !important;
+  --sand_900: #12110d;
+  --sand_800: #262522;
+  --sand_700: #45433e;
+  --sand_600: #6b6860;
+  --sand_500: #a49f95;
+  --sand_400: #cac5b8;
+  --sand_300: #e1ded5;
+  --sand_200: #f0efeb;
+  --sand_100: #f9f8f6;
+  --sand_0: #fdfdfc;
+  --grape_0: #f0f3fe;
+  --grape_100: #d4dbfb;
+  --grape_500: #566fcf;
+  --grape_600: #576cc1;
+  --grape_700: #4c5fa9;
+  --grape_800: #37447a;
+  --kale_0: #f4f9f9;
+  --kale_400: #57b7ab;
+  --plum_500: #cc6fbe;
+  --plum_400: #e37bd3;
+  --plum_100: #f7d6f2;
+  --plum_0: #fbf2fc;
+  --persimmon_300: #ff9f89;
+  --persimmon_400: #ff7557;
+  --canteloupe_0: #fff6ef;
+  --canteloupe_100: #ffe4d0;
+  --canteloupe_400: #ffa663;
+  --canteloupe_500: #e69559;
+  --canteloupe_600: #cc854f;
+  --canteloupe_700: #b37445;
+  --red_1: #fff1f0;
+  --red_3: #ffccc7;
+  --red_7: #cf1322;
+  --red_10: #5c0011;
+  --primary_link: #566fcf;
+  --danger_color: var(--red_7);
+}
 .ls-projects-page {
   min-height: calc(100vh - var(--header-height));
 }
