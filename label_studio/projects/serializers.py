@@ -3,12 +3,12 @@
 import bleach
 from constants import SAFE_HTML_ATTRIBUTES, SAFE_HTML_TAGS
 from django.db.models import Q
-from projects.models import Project, ProjectImport, ProjectOnboarding, ProjectReimport, ProjectSummary
+from projects.models import Project, ProjectImport, ProjectMember, ProjectOnboarding, ProjectReimport, ProjectSummary
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
 from tasks.models import Task
-from users.serializers import UserSimpleSerializer
+from users.serializers import UserAccessSettingSerializer, UserSimpleSerializer
 
 
 class CreatedByFromContext:
@@ -264,3 +264,12 @@ class GetFieldsSerializer(serializers.Serializer):
     def validate_filter(self, value):
         if value in ['all', 'pinned_only', 'exclude_pinned']:
             return value
+
+class ProjectMemberSerializer(serializers.ModelSerializer):
+    """Adds all user properties"""
+
+    user = UserAccessSettingSerializer()
+
+    class Meta:
+        model = ProjectMember
+        fields = ['id', 'enabled', 'user']

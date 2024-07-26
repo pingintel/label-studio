@@ -836,3 +836,54 @@ class ProjectModelVersions(generics.RetrieveAPIView):
         count = project.delete_predictions(model_version=model_version)
 
         return Response(data=count)
+
+class ProjectMemberPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+
+    def get_page_size(self, request):
+        # emulate "unlimited" page_size
+        if (
+            self.page_size_query_param in request.query_params
+            and request.query_params[self.page_size_query_param] == '-1'
+        ):
+            return 1000000
+        return super().get_page_size(request)
+    
+@method_decorator(
+    name='get',
+    decorator=swagger_auto_schema(
+        tags=['Project'],
+        x_fern_sdk_group_name=['projects', 'members'],
+        x_fern_sdk_method_name='list',
+        x_fern_pagination={
+            'offset': '$request.page',
+            'results': '$response.results',
+        },
+        operation_summary='Get project members list',
+        operation_description='Retrieve a list of the project members and their IDs.',
+    ),
+)
+class ProjectMemberListAPI(generics.ListAPIView):
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    permission_required = ViewClassPermission(
+        GET=all_permissions.organizations_view,
+        PATCH=all_permissions.organizations_change,
+    )
+    serializer_class = ProjectMemberSerializer
+    pagination_class = ProjectMemberPagination
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+        }
+
+    def get_queryset(self):
+        project_id = self.kwargs[self.lookup_field]
+        search_query = self.request.query_params.get('search', None)
+        project_members = ProjectMember.objects.filter(project_id=project_id).order_by('-enabled', 'id')
+
+        if search_query:
+            project_members = project_members.filter(user__email__icontains=search_query)
+        
+        return project_members
