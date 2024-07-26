@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from khan.rbac.models import UserRole
+from khan.rbac.roles import Role
 from organizations.models import Organization, OrganizationMember
 from organizations.serializers import (
     OrganizationIdSerializer,
@@ -184,6 +186,71 @@ class OrganizationMemberDetailAPI(GetParentObjectMixin, generics.RetrieveDestroy
         member.soft_delete()
         return Response(status=204)  # 204 No Content is a common HTTP status for successful delete requests
 
+@method_decorator(
+    name='patch',
+    decorator=swagger_auto_schema(
+        tags=['Organizations'],
+        x_fern_sdk_group_name=['organizations', 'permissions'],
+        x_fern_sdk_method_name='update',
+        operation_summary='Update organization member permission',
+        operation_description='Update permissions of an organization member',
+        manual_parameters=[
+            openapi.Parameter(
+                name='user_pk',
+                type=openapi.TYPE_INTEGER,
+                in_=openapi.IN_PATH,
+                description='A unique integer value identifying the user whose permissions should be updated.',
+            ),
+        ],
+        responses={
+            204: 'Permission updated successfully.',
+            405: 'User cannot update self permissions.',
+            405: 'Cannot update organization creator permissions',
+            404: 'Member not found',
+            400: 'New role must be provided to update permissions.',
+        },
+    ),
+)
+class OrganizationMemberPermissionUpdateAPI(GetParentObjectMixin, generics.UpdateAPIView):
+    permission_required = all_permissions.organizations_change
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    parent_queryset = Organization.objects.all()
+
+    def patch(self, request, pk=None, user_pk=None):
+        org = self.get_parent_object()
+        if org != request.user.active_organization:
+            raise PermissionDenied('You can only update permissions for your current active organization')
+
+        user = get_object_or_404(User, pk=user_pk)
+        member = get_object_or_404(OrganizationMember, user=user, organization=org)
+        if member is None:
+            raise NotFound('Member not found')
+        
+        if org.created_by.id == member.user.id:
+            return Response({'detail': 'Cannot update organization creator permissions'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        if member.user_id == request.user.id:
+            return Response({'detail': 'User cannot update self permissions'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        user_role = UserRole.objects.filter(user=user).first()
+
+        new_role = self.request.data.get('role')
+
+        if new_role is None:
+            return Response({'detail': 'New role must be provided to update permissions.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            new_role = int(new_role)
+            if new_role not in [role.value for role in Role]:
+                raise ValueError
+        except (ValueError, TypeError):
+            return Response({'detail': 'Invalid role provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        user_role.role = new_role
+        user_role.save()
+
+        return Response(status=200)
 
 @method_decorator(
     name='get',
@@ -209,7 +276,8 @@ class OrganizationAPI(generics.RetrieveUpdateAPIView):
 
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     queryset = Organization.objects.all()
-    permission_required = all_permissions.organizations_change
+    permission_required = ViewClassPermission(GET=all_permissions.organizations_view,
+    PATCH=all_permissions.organizations_change)
     serializer_class = OrganizationSerializer
 
     redirect_route = 'organizations-dashboard'

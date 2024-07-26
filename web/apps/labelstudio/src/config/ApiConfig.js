@@ -6,9 +6,13 @@ export const API_CONFIG = {
     me: "/current-user/whoami",
 
     // Organization
+    detail: "/organizations/:pk",
     memberships: "/organizations/:pk/memberships",
     inviteLink: "/invite",
     resetInviteLink: "POST:/invite/reset-token",
+
+    // Permissions
+    updatePermission: "PATCH:/organizations/:pk/memberships/:user_pk/permission",
 
     // Project
     projects: "/projects",

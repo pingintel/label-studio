@@ -58,6 +58,25 @@
     &.last-activity
       width 160px
 
+  &__column
+    &.role
+      width 160px
+      display flex
+      justify-content center
+
+  &__field
+    &.role
+      width 160px
+      display flex
+      justify-content center
+
+      .select
+        width 100% /* Ensure the div also adjusts */
+
+        &__list:focus
+          border none
+          box-shadow none
+
   &__user
     cursor pointer
     display flex

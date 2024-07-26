@@ -8,7 +8,7 @@ export const ConfigConsumer = ConfigContext.Consumer;
 export const ConfigProvider = ({ children }) => {
   const [config, setConfig] = useState(window.APP_SETTINGS ?? {});
 
-  const update = (newConfig) => {
+  const update = newConfig => {
     if (!newConfig) return;
 
     setConfig(newConfig);
@@ -17,11 +17,15 @@ export const ConfigProvider = ({ children }) => {
   const contextValue = useMemo(() => {
     return {
       ...config,
-      update,
+      update
     };
   }, [config]);
 
-  return <ConfigContext.Provider value={contextValue}>{children}</ConfigContext.Provider>;
+  return (
+    <ConfigContext.Provider value={contextValue}>
+      {children}
+    </ConfigContext.Provider>
+  );
 };
 
 export const useConfig = () => {

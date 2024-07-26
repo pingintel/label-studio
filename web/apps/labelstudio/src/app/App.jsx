@@ -12,13 +12,19 @@ import { LibraryProvider } from "../providers/LibraryProvider";
 import { MultiProvider } from "../providers/MultiProvider";
 import { ProjectProvider } from "../providers/ProjectProvider";
 import { RoutesProvider } from "../providers/RoutesProvider";
-import { DRAFT_GUARD_KEY, DraftGuard, draftGuardCallback } from "../components/DraftGuard/DraftGuard";
+import { CurrentUserProvider } from "../providers/CurrentUser";
+import {
+  DRAFT_GUARD_KEY,
+  DraftGuard,
+  draftGuardCallback
+} from "../components/DraftGuard/DraftGuard";
 import "./App.styl";
 import { AsyncPage } from "./AsyncPage/AsyncPage";
 import ErrorBoundary from "./ErrorBoundary";
 import { RootPage } from "./RootPage";
 import { FF_OPTIC_2, isFF } from "../utils/feature-flags";
 import { ToastProvider, ToastViewport } from "../components/Toast/Toast";
+import { OrganizationProvider } from "../providers/OrganizationProvider";
 
 const baseURL = new URL(APP_SETTINGS.hostname || location.origin);
 
@@ -30,7 +36,7 @@ const browserHistory = createBrowserHistory({
     } else {
       callback(window.confirm(message));
     }
-  },
+  }
 });
 
 window.LSH = browserHistory;
@@ -42,13 +48,13 @@ const App = ({ content }) => {
     lsf: {
       scriptSrc: window.EDITOR_JS,
       cssSrc: window.EDITOR_CSS,
-      checkAvailability: () => !!window.LabelStudio,
+      checkAvailability: () => !!window.LabelStudio
     },
     dm: {
       scriptSrc: window.DM_JS,
       cssSrc: window.DM_CSS,
-      checkAvailability: () => !!window.DataManager,
-    },
+      checkAvailability: () => !!window.DataManager
+    }
   };
 
   return (
@@ -61,8 +67,10 @@ const App = ({ content }) => {
             <ConfigProvider key="config" />,
             <LibraryProvider key="lsf" libraries={libraries} />,
             <RoutesProvider key="rotes" />,
+            <OrganizationProvider key="organization" />,
             <ProjectProvider key="project" />,
             <ToastProvider key="toast" />,
+            <CurrentUserProvider key="current-user" />
           ]}
         >
           <AsyncPage>
