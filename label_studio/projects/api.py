@@ -26,11 +26,12 @@ from ml.serializers import MLBackendSerializer
 from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
-from projects.models import Project, ProjectImport, ProjectManager, ProjectReimport, ProjectSummary
+from projects.models import Project, ProjectImport, ProjectManager, ProjectMember, ProjectReimport, ProjectSummary
 from projects.serializers import (
     GetFieldsSerializer,
     ProjectImportSerializer,
     ProjectLabelConfigSerializer,
+    ProjectMemberSerializer,
     ProjectModelVersionExtendedSerializer,
     ProjectReimportSerializer,
     ProjectSerializer,
@@ -251,9 +252,10 @@ class ProjectListAPI(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
         filter = serializer.validated_data.get('filter')
-        projects = Project.objects.filter(organization=self.request.user.active_organization).order_by(
+        projects = Project.objects.filter(organization=self.request.user.active_organization, members__user=self.request.user, members__enabled=True).order_by(
             F('pinned_at').desc(nulls_last=True), '-created_at'
         )
+
         if filter in ['pinned_only', 'exclude_pinned']:
             projects = projects.filter(pinned_at__isnull=filter == 'exclude_pinned')
         return ProjectManager.with_counts_annotate(projects, fields=fields).prefetch_related('members', 'created_by')
