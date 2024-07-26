@@ -203,9 +203,9 @@ class OrganizationMemberDetailAPI(GetParentObjectMixin, generics.RetrieveDestroy
             ),
         ],
         responses={
-            204: 'Permission updated successfully.',
-            405: 'User cannot update self permissions.',
-            405: 'Cannot update organization creator permissions',
+            200: 'Permission updated successfully.',
+            403: 'User cannot update self permissions.',
+            403: 'Cannot update organization creator permissions',
             404: 'Member not found',
             400: 'New role must be provided to update permissions.',
         },
@@ -227,10 +227,10 @@ class OrganizationMemberPermissionUpdateAPI(GetParentObjectMixin, generics.Updat
             raise NotFound('Member not found')
         
         if org.created_by.id == member.user.id:
-            return Response({'detail': 'Cannot update organization creator permissions'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'detail': 'Cannot update organization creator permissions'}, status=status.HTTP_403_FORBIDDEN)
 
         if member.user_id == request.user.id:
-            return Response({'detail': 'User cannot update self permissions'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            return Response({'detail': 'User cannot update self permissions'}, status=status.HTTP_403_FORBIDDEN)
 
         user_role = UserRole.objects.filter(user=user).first()
 

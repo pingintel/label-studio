@@ -47,6 +47,7 @@ _api_urlpatterns = [
     path('<int:pk>/model-versions/', api.ProjectModelVersions.as_view(), name='project-model-versions'),
     # project memberships list viewset
     path('<int:pk>/memberships', api.ProjectMemberListAPI.as_view(), name='project-memberships-list'),
+    path('<int:pk>/memberships/update', api.ProjectMemberBulkUpdateAPI.as_view(), name='project-memberships-update'),
 
 ]
 

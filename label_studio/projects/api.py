@@ -853,7 +853,7 @@ class ProjectMemberPagination(PageNumberPagination):
 @method_decorator(
     name='get',
     decorator=swagger_auto_schema(
-        tags=['Project'],
+        tags=['Projects'],
         x_fern_sdk_group_name=['projects', 'members'],
         x_fern_sdk_method_name='list',
         x_fern_pagination={
@@ -862,13 +862,20 @@ class ProjectMemberPagination(PageNumberPagination):
         },
         operation_summary='Get project members list',
         operation_description='Retrieve a list of the project members and their IDs.',
+        manual_parameters=[
+            openapi.Parameter(
+                'search',
+                openapi.IN_QUERY,
+                description="Search project members by user email",
+                type=openapi.TYPE_STRING
+            )
+        ]
     ),
 )
 class ProjectMemberListAPI(generics.ListAPIView):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     permission_required = ViewClassPermission(
         GET=all_permissions.organizations_view,
-        PATCH=all_permissions.organizations_change,
     )
     serializer_class = ProjectMemberSerializer
     pagination_class = ProjectMemberPagination
@@ -881,9 +888,86 @@ class ProjectMemberListAPI(generics.ListAPIView):
     def get_queryset(self):
         project_id = self.kwargs[self.lookup_field]
         search_query = self.request.query_params.get('search', None)
-        project_members = ProjectMember.objects.filter(project_id=project_id).order_by('-enabled', 'id')
+        
+        project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=project_id)
+        owner_id = project.created_by_id
+
+        project_members = ProjectMember.objects.filter(project_id=project_id).exclude(user_id=owner_id).order_by('-enabled', 'id')
 
         if search_query:
             project_members = project_members.filter(user__email__icontains=search_query)
         
         return project_members
+
+@method_decorator(
+    name='patch',
+    decorator=swagger_auto_schema(
+        tags=['Projects'],
+        x_fern_sdk_group_name=['projects', 'members'],
+        x_fern_sdk_method_name='update_project_members_enabled',
+        operation_summary='Update project members enabed status',
+        operation_description='Update the enabled status of multiple project members in bulk.',
+        manual_parameters=[openapi.Parameter(
+            'pk',
+            openapi.IN_PATH,
+            description="ID of the project",
+            type=openapi.TYPE_INTEGER,
+        )],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the user'),
+                    'enabled': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Enabled status of the user')
+                }
+            )
+        ),
+        responses={
+            200: 'Members updated successfully',
+            400: 'Request must contain at least one user to update',
+            403: 'User cannot update self enabled status',
+            403: 'Cannot update project owner enabled status',
+        }
+    ),
+)
+class ProjectMemberBulkUpdateAPI(generics.UpdateAPIView):
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    permission_required = all_permissions.organizations_change
+
+    def patch(self, request, *args, **kwargs):
+        project_id = self.kwargs['pk']
+        members_data = request.data
+
+        print(request.user.id)
+
+        user_ids = [member['user_id'] for member in members_data]
+        member_map = {member['user_id']: member['enabled'] for member in members_data}
+
+        if len(user_ids) == 0:
+            return Response({'detail': 'Request must contain at least one user to update'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        self_update_requested = member_map.get(request.user.id, None)
+
+        if self_update_requested is not None:
+            return Response({'detail': 'User cannot update self enabled status'}, status=status.HTTP_403_FORBIDDEN)
+        
+        project = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=project_id)
+        owner_id = project.created_by_id
+
+        project_owner_requested = member_map.get(owner_id, None)
+
+        if project_owner_requested is not None:
+            return Response({'detail': 'Cannot update project owner enabled status'}, status=status.HTTP_403_FORBIDDEN)
+
+        members_to_update = ProjectMember.objects.filter(project_id=project_id, user_id__in=user_ids)
+
+        for member in members_to_update:
+            member.enabled = member_map[member.user_id]
+
+        ProjectMember.objects.bulk_update(members_to_update, ['enabled'])
+
+        updated_project_members = ProjectMember.objects.filter(project_id=project_id).exclude(user_id=owner_id).order_by('-enabled', 'id')
+        serializer = ProjectMemberSerializer(updated_project_members, many=True, context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
