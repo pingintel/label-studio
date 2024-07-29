@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { SidebarMenu } from "../../components/SidebarMenu/SidebarMenu";
 import { WebhookPage } from "../WebhookPage/WebhookPage";
 import { DangerZone } from "./DangerZone";
@@ -13,10 +13,23 @@ import {
   LF_CLOUD_STORAGE_FOR_MANAGERS
 } from "../../utils/license-flags";
 import { AccessSettings } from "./AccessSettings/AccessSettings";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { Spinner } from "../../components/Spinner/Spinner";
+import { ROLES } from "../../utils/roles";
 
 const isAllowCloudStorage = !isInLicense(LF_CLOUD_STORAGE_FOR_MANAGERS);
 
 export const MenuLayout = ({ children, ...routeProps }) => {
+  const { user } = useCurrentUser();
+
+  if (!user) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+        <Spinner size={32} />
+      </div>
+    );
+  }
+  
   return (
     <SidebarMenu
       menuItems={[
@@ -27,8 +40,8 @@ export const MenuLayout = ({ children, ...routeProps }) => {
         PredictionsSettings,
         isAllowCloudStorage && StorageSettings,
         WebhookPage,
-        AccessSettings,
-        DangerZone
+        user.user_role >= ROLES.LABELING_INFRA && AccessSettings,
+        user.user_role >= ROLES.LABELING_INFRA && DangerZone
       ].filter(Boolean)}
       path={routeProps.match.url}
       children={children}
