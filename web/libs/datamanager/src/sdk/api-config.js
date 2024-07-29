@@ -11,6 +11,9 @@ export const APIConfig = {
     /** user info */
     user: "/../users/:pk",
 
+    // Whoami
+    me: "/../current-user/whoami",
+
     /** Available columns/fields of the dataset */
     columns: "/columns",
 

@@ -9,6 +9,8 @@ import { useFixedLocation, useParams } from "../../providers/RoutesProvider";
 import { BemWithSpecifiContext } from "../../utils/bem";
 import { isDefined } from "../../utils/helpers";
 import "./ExportPage.styl";
+import { useCurrentUser } from "../../providers/CurrentUser";
+import { ROLES } from "../../utils/roles";
 
 // const formats = {
 //   json: 'JSON',
@@ -25,13 +27,14 @@ const downloadFile = (blob, filename) => {
 
 const { Block, Elem } = BemWithSpecifiContext();
 
-const wait = () => new Promise((resolve) => setTimeout(resolve, 5000));
+const wait = () => new Promise(resolve => setTimeout(resolve, 5000));
 
 export const ExportPage = () => {
   const history = useHistory();
   const location = useFixedLocation();
   const pageParams = useParams();
   const api = useAPI();
+  const { user } = useCurrentUser();
 
   const [previousExports, setPreviousExports] = useState([]);
   const [downloading, setDownloading] = useState(false);
@@ -52,14 +55,14 @@ export const ExportPage = () => {
     const params = form.current.assembleFormData({
       asJSON: true,
       full: true,
-      booleansAsNumbers: true,
+      booleansAsNumbers: true
     });
 
     const response = await api.callApi("exportRaw", {
       params: {
         pk: pageParams.id,
-        ...params,
-      },
+        ...params
+      }
     });
 
     if (response.ok) {
@@ -80,8 +83,8 @@ export const ExportPage = () => {
       api
         .callApi("previousExports", {
           params: {
-            pk: pageParams.id,
-          },
+            pk: pageParams.id
+          }
         })
         .then(({ export_files }) => {
           setPreviousExports(export_files.slice(0, 1));
@@ -90,10 +93,10 @@ export const ExportPage = () => {
       api
         .callApi("exportFormats", {
           params: {
-            pk: pageParams.id,
-          },
+            pk: pageParams.id
+          }
         })
-        .then((formats) => {
+        .then(formats => {
           setAvailableFormats(formats);
           setCurrentFormat(formats[0]?.name);
         });
@@ -160,39 +163,62 @@ export const ExportPage = () => {
       // footer="Read more about supported export formats in the Documentation."
       visible
     >
-      <Block name="export-page">
-        <FormatInfo
-          availableFormats={availableFormats}
-          selected={currentFormat}
-          onClick={(format) => setCurrentFormat(format.name)}
-        />
+      {user && user.user_role >= ROLES.LABELING_INFRA ? (
+        <Block name="export-page">
+          <FormatInfo
+            availableFormats={availableFormats}
+            selected={currentFormat}
+            onClick={format => setCurrentFormat(format.name)}
+          />
 
-        <Form ref={form}>
-          <Input type="hidden" name="exportType" value={currentFormat} />
+          <Form ref={form}>
+            <Input type="hidden" name="exportType" value={currentFormat} />
 
-          {/* {aggregation} */}
+            {/* {aggregation} */}
 
-          {/*<Form.Row columnCount={3} style={{marginTop: 24}}>*/}
-          {/*  <Toggle label="Only finished tasks" name="finished" checked/>*/}
-          {/*  <Toggle label="Include full task descriptions" name="return_task" checked/>*/}
-          {/*  <Toggle label="Include predictions" name="return_predictions" checked/>*/}
-          {/*</Form.Row>*/}
-        </Form>
+            {/*<Form.Row columnCount={3} style={{marginTop: 24}}>*/}
+            {/*  <Toggle label="Only finished tasks" name="finished" checked/>*/}
+            {/*  <Toggle label="Include full task descriptions" name="return_task" checked/>*/}
+            {/*  <Toggle label="Include predictions" name="return_predictions" checked/>*/}
+            {/*</Form.Row>*/}
+          </Form>
 
-        <Elem name="footer">
-          <Space style={{ width: "100%" }} spread>
-            <Elem name="recent">{/* {exportHistory} */}</Elem>
-            <Elem name="actions">
-              <Space>
-                {downloadingMessage && "Files are being prepared. It might take some time."}
-                <Elem tag={Button} name="finish" look="primary" onClick={proceedExport} waiting={downloading}>
-                  Export
-                </Elem>
-              </Space>
-            </Elem>
-          </Space>
-        </Elem>
-      </Block>
+          <Elem name="footer">
+            <Space style={{ width: "100%" }} spread>
+              <Elem name="recent">{/* {exportHistory} */}</Elem>
+              <Elem name="actions">
+                <Space>
+                  {downloadingMessage &&
+                    "Files are being prepared. It might take some time."}
+                  <Elem
+                    tag={Button}
+                    name="finish"
+                    look="primary"
+                    onClick={proceedExport}
+                    waiting={downloading}
+                  >
+                    Export
+                  </Elem>
+                </Space>
+              </Elem>
+            </Space>
+          </Elem>
+        </Block>
+      ) : (
+        <Block
+          name="export-page"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: "20px",
+            paddingTop: "20px",
+            paddingBottom: "20px"
+          }}
+        >
+          You do not have the necessary permissions to export
+        </Block>
+      )}
     </Modal>
   );
 };
@@ -200,15 +226,17 @@ export const ExportPage = () => {
 const FormatInfo = ({ availableFormats, selected, onClick }) => {
   return (
     <Block name="formats">
-      <Elem name="info">You can export dataset in one of the following formats:</Elem>
+      <Elem name="info">
+        You can export dataset in one of the following formats:
+      </Elem>
       <Elem name="list">
-        {availableFormats.map((format) => (
+        {availableFormats.map(format => (
           <Elem
             key={format.name}
             name="item"
             mod={{
               active: !format.disabled,
-              selected: format.name === selected,
+              selected: format.name === selected
             }}
             onClick={!format.disabled ? () => onClick(format) : null}
           >
@@ -224,7 +252,9 @@ const FormatInfo = ({ availableFormats, selected, onClick }) => {
               </Space>
             </Elem>
 
-            {format.description && <Elem name="description">{format.description}</Elem>}
+            {format.description && (
+              <Elem name="description">{format.description}</Elem>
+            )}
           </Elem>
         ))}
       </Elem>
@@ -232,7 +262,12 @@ const FormatInfo = ({ availableFormats, selected, onClick }) => {
         Can't find an export format?
         <br />
         Please let us know in{" "}
-        <a className="no-go" href="https://slack.labelstud.io/?source=product-export" target="_blank" rel="noreferrer">
+        <a
+          className="no-go"
+          href="https://slack.labelstud.io/?source=product-export"
+          target="_blank"
+          rel="noreferrer"
+        >
           Slack
         </a>{" "}
         or submit an issue to the{" "}
