@@ -11,6 +11,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render, reverse
 from django.utils.http import is_safe_url
+from khan.rbac.models import UserRole
+from khan.rbac.roles import Role
 from organizations.forms import OrganizationSignupForm
 from organizations.models import Organization
 from rest_framework.authtoken.models import Token
@@ -137,6 +139,10 @@ def user_account(request):
 
     form = forms.UserProfileForm(instance=user)
     token = Token.objects.get(user=user)
+    role = UserRole.objects.filter(user=user).first()
+
+    if role.role < Role.LABELING_INFRA:
+        token = ""
 
     if request.method == 'POST':
         form = forms.UserProfileForm(request.POST, instance=user)
@@ -147,5 +153,5 @@ def user_account(request):
     return render(
         request,
         'users/user_account.html',
-        {'settings': settings, 'user': user, 'user_profile_form': form, 'token': token},
+        {'settings': settings, 'user': user, 'user_profile_form': form, 'token': token, 'role': role.role},
     )
