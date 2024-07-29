@@ -55,8 +55,6 @@ export const AccessSettings = () => {
       body: accessData
     });
 
-    console.log(response);
-
     return response;
   }, []);
 
@@ -91,7 +89,7 @@ export const AccessSettings = () => {
     setSelectedUsers([]);
     setUsersList(new_users);
     setUpdating(false);
-  }
+  };
 
   const handleUserSelected = userData => {
     setSelectedUsers(prev => {
@@ -143,11 +141,19 @@ export const AccessSettings = () => {
                           return 0;
                         })
                         .map(({ user, enabled }) => {
+                          const user_in_selected = selectedUsers.find(
+                            u => u.user_id === user.id
+                          );
+
+                          const initialValue = user_in_selected
+                            ? user_in_selected.enabled
+                            : enabled;
+
                           return (
                             <AccessRow
                               key={user.id}
                               user={user}
-                              initialValue={enabled}
+                              initialValue={initialValue}
                               onUserSelected={handleUserSelected}
                             />
                           );
