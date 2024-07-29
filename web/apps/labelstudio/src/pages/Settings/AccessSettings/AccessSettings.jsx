@@ -10,6 +10,7 @@ import {
 } from "../../../components/Pagination/Pagination";
 import { debounce } from "../../../utils/debounce";
 import { Button, Spinner } from "../../../components";
+import { Label } from "../../../components/Form";
 import AccessRow from "./AccessRow";
 
 const SEARCH_DEBOUNCE_DELAY = 500;
@@ -107,6 +108,10 @@ export const AccessSettings = () => {
     <Block name="annotation-settings">
       <Elem name={"wrapper"}>
         <h1>Access Settings</h1>
+        <Label
+          description="Configure who has access to view this project."
+          style={{ marginBottom: "10px" }}
+        />
         <Block name="settings-wrapper">
           <div className={cn("div-wrapper")}>
             <div className={cn("search-bar-wrapper")}>
@@ -129,7 +134,7 @@ export const AccessSettings = () => {
                         Email
                       </Elem>
                       <Elem name="column" mix="access">
-                        Add
+                        View
                       </Elem>
                     </Elem>
                     <Elem name="body">
