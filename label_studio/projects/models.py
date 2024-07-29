@@ -1433,13 +1433,25 @@ class ProjectReimport(models.Model):
 def create_project_member(sender, instance, **kwargs):
     from organizations.models import OrganizationMember
     from users.models import User
+    from projects.models import ProjectMember
 
     project = instance
-    org_members = OrganizationMember.objects.filter(organization_id=project.organization.id)
-    org_users = User.objects.filter(id__in=org_members.values('user_id'))
+    
+    try:
+        with transaction.atomic():
+            org_members = OrganizationMember.objects.filter(organization_id=project.organization.id)
+            org_users = User.objects.filter(id__in=org_members.values('user_id'))
+            existing_members = ProjectMember.objects.filter(project=project).values_list('user_id', flat=True)
 
-    for user in org_users:
-        if user.id is project.created_by.id:
-            project.add_collaborator(user=user, enabled=True)
-        else:
-            project.add_collaborator(user=user, enabled=False)
+            project_members = []
+            for user in org_users:
+                if user.id not in existing_members:
+                    enabled = user.id == project.created_by.id
+                    project_members.append(ProjectMember(user=user, project=project, enabled=enabled))
+            
+            if project_members:
+                ProjectMember.objects.bulk_create(project_members)
+    except Exception as e:
+        logger.error(f"Error adding project members for project {project.id}: {str(e)}")
+        raise # Need this so transaction gets rolled back
+    
