@@ -192,6 +192,24 @@ DJANGO_DB=sqlite DJANGO_SETTINGS_MODULE=khan.settings.prod pytest -vv
 DJANGO_DB=default DJANGO_SETTINGS_MODULE=khan.settings.prod pytest -vv
 ```
 
+## Ping Data Intelligence Infra Scripts
+
+Frontend - 
+Only build = `python infra/build_frontend.py`
+Also commit and push to remote repo = `python infra/build_frontend.py -p`
+
+Backend - 
+Only build = `python infra/build_image.py` 
+Also push to ECR after build = 
+```bash
+# Assume pingintel-ml role using Granted
+assume
+
+# Create and push the image
+python infra/build_image.py -p
+```
+
+For more info see [the README for Infra Scripts](./infra/README.md)
 
 ## What you get from Label Studio
 
