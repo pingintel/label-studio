@@ -6,10 +6,11 @@ import { Spinner } from "../Common/Spinner";
 import { DataManager } from "../DataManager/DataManager";
 import { Labeling } from "../Label/Label";
 import "./App.styl";
+import { CurrentUserProvider } from "../../providers/CurrentUser";
 
 class ErrorBoundary extends React.Component {
   state = {
-    error: null,
+    error: null
   };
 
   componentDidCatch(error) {
@@ -17,7 +18,11 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    return this.state.error ? <div className="error">{this.state.error}</div> : this.props.children;
+    return this.state.error ? (
+      <div className="error">{this.state.error}</div>
+    ) : (
+      this.props.children
+    );
   }
 }
 
@@ -30,23 +35,27 @@ const AppComponent = ({ app }) => {
     <ErrorBoundary>
       <Provider store={app}>
         <SDKProvider sdk={app.SDK}>
-          <Block name="root" mod={{ mode: app.SDK.mode }}>
-            {app.crashed ? (
-              <Block name="crash">
-                <Elem name="header">Oops...</Elem>
-                <Elem name="description">Project has been deleted or not yet created.</Elem>
-              </Block>
-            ) : app.loading ? (
-              <Block name="app-loader">
-                <Spinner size="large" />
-              </Block>
-            ) : app.isLabeling ? (
-              <Labeling />
-            ) : (
-              <DataManager />
-            )}
-            <Block name={"offscreen-lsf"} />
-          </Block>
+          <CurrentUserProvider sdk={app.SDK}>
+            <Block name="root" mod={{ mode: app.SDK.mode }}>
+              {app.crashed ? (
+                <Block name="crash">
+                  <Elem name="header">Oops...</Elem>
+                  <Elem name="description">
+                    Project has been deleted or not yet created.
+                  </Elem>
+                </Block>
+              ) : app.loading ? (
+                <Block name="app-loader">
+                  <Spinner size="large" />
+                </Block>
+              ) : app.isLabeling ? (
+                <Labeling />
+              ) : (
+                <DataManager />
+              )}
+              <Block name={"offscreen-lsf"} />
+            </Block>
+          </CurrentUserProvider>
         </SDKProvider>
       </Provider>
     </ErrorBoundary>

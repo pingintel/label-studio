@@ -5,6 +5,7 @@ import logging
 from typing import Any, Mapping, Optional
 
 from annoying.fields import AutoOneToOneField
+from django.dispatch import receiver
 from core.feature_flags import flag_set
 from core.label_config import (
     check_control_in_config_by_regex,
@@ -32,6 +33,7 @@ from django.conf import settings
 from django.core.validators import MaxLengthValidator, MinLengthValidator
 from django.db import models, transaction
 from django.db.models import Avg, BooleanField, Case, Count, JSONField, Max, Q, Sum, Value, When
+from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
 from label_studio_sdk._extensions.label_studio_tools.core.label_config import parse_config
 from labels_manager.models import Label
@@ -391,13 +393,13 @@ class Project(ProjectMixin, models.Model):
         self.token = create_hash()
         self.save(update_fields=['token'])
 
-    def add_collaborator(self, user):
+    def add_collaborator(self, user, enabled):
         created = False
         with transaction.atomic():
             try:
                 ProjectMember.objects.get(user=user, project=self)
             except ProjectMember.DoesNotExist:
-                ProjectMember.objects.create(user=user, project=self)
+                ProjectMember.objects.create(user=user, project=self, enabled=enabled)
                 created = True
             else:
                 logger.debug(f'Project membership {self} for user {user} already exists')
@@ -1426,3 +1428,30 @@ class ProjectReimport(models.Model):
 
     def has_permission(self, user):
         return self.project.has_permission(user)
+
+@receiver(post_save, sender=Project)
+def create_project_member(sender, instance, **kwargs):
+    from organizations.models import OrganizationMember
+    from users.models import User
+    from projects.models import ProjectMember
+
+    project = instance
+    
+    try:
+        with transaction.atomic():
+            org_members = OrganizationMember.objects.filter(organization_id=project.organization.id)
+            org_users = User.objects.filter(id__in=org_members.values('user_id'))
+            existing_members = ProjectMember.objects.filter(project=project).values_list('user_id', flat=True)
+
+            project_members = []
+            for user in org_users:
+                if user.id not in existing_members:
+                    enabled = user.id == project.created_by.id
+                    project_members.append(ProjectMember(user=user, project=project, enabled=enabled))
+            
+            if project_members:
+                ProjectMember.objects.bulk_create(project_members)
+    except Exception as e:
+        logger.error(f"Error adding project members for project {project.id}: {str(e)}")
+        raise # Need this so transaction gets rolled back
+    

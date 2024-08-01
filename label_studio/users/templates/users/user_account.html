@@ -83,6 +83,7 @@
     </form>
 
     <!-- Token -->
+    {% if role >= 3 %}
     <form action="" class="access_token__info">
       <header>Access Token</header>
       <div class="field field--wide">
@@ -93,6 +94,8 @@
           <button type="button" class="blinking-status ls-button" name="renew">Renew</button>
         </p>
       </div>
+      
+
       <!-- Example -->
       <div class="field field--wide">
         <label for="example_fetch">Example fetch projects data:</label>
@@ -116,7 +119,7 @@
         </p>
       </div>
     </form>
-
+    {% endif %}
 
     <!-- Organization -->
     <form action="" class="organization block-info" id="organization">

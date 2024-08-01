@@ -106,6 +106,11 @@ class UserSimpleSerializer(BaseUserSerializer):
         model = User
         fields = ('id', 'first_name', 'last_name', 'email', 'avatar')
 
+class UserAccessSettingSerializer(BaseUserSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'avatar', 'user_role')
+
 
 UserSerializer = load_func(settings.USER_SERIALIZER)
 UserSerializerUpdate = load_func(settings.USER_SERIALIZER_UPDATE)
