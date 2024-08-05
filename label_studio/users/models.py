@@ -15,6 +15,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from projects.models import Project, ProjectMember
 from organizations.models import Organization
 from rest_framework.authtoken.models import Token
 from django.core.validators import EmailValidator
@@ -218,3 +219,19 @@ def init_user(sender, instance=None, created=False, **kwargs):
     if created:
         # create token for user
         Token.objects.create(user=instance)
+
+        # add user to projects as a enabled=False project member
+        projects = Project.objects.all()
+        now = timezone.now()
+
+        project_memberships = [
+            ProjectMember(
+                enabled=False,
+                created_at=now,
+                updated_at=now,
+                project=project,
+                user=instance
+            ) for project in projects
+        ]
+
+        ProjectMember.objects.bulk_create(project_memberships)
