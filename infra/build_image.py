@@ -15,7 +15,7 @@ if IS_WINDOWS:
     def quote(s):
         return s
 
-def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag):
+def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag, image_version):
     """Build the Docker image"""
     
     log_message("*** Starting Docker Image build process ***")
@@ -26,7 +26,9 @@ def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag
 
     os.chdir(abs_dir)
     log_message("Running 'docker build'")
-    cmd = f"docker build -t {docker_image_tag} --platform linux/amd64 ."
+    tags = set(['latest', image_version])
+    tags = ' '.join([f'-t {docker_image_tag}:{t}' for t in tags])
+    cmd = f"docker build {tags} --platform linux/amd64 ."
     execute(cmd)
 
     if push:
@@ -39,10 +41,16 @@ def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag
         log_message("Tagging the image")
         cmd = f"docker tag {docker_image_tag}:latest {aws_account}.dkr.ecr.{aws_region}.amazonaws.com/{ecr_repo}:latest"
         execute(cmd)
+        if image_version != 'latest': 
+            cmd = f"docker tag {docker_image_tag}:{image_version} {aws_account}.dkr.ecr.{aws_region}.amazonaws.com/{ecr_repo}:{image_version}"
+            execute(cmd)
 
         log_message("Pushing")
         cmd = f"docker push {aws_account}.dkr.ecr.{aws_region}.amazonaws.com/{ecr_repo}:latest"
         execute(cmd)
+        if image_version != 'latest': 
+            cmd = f"docker push {aws_account}.dkr.ecr.{aws_region}.amazonaws.com/{ecr_repo}:{image_version}"
+            execute(cmd)
 
         log_message("Done!")
       
@@ -52,8 +60,9 @@ def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag
 @click.option("--aws-account", default="654654387973")
 @click.option("--ecr-repo", default="label-studio")
 @click.option("--aws-region", help="Region, defaults to us-east-1", default="us-east-1")
-def run(push, aws_account, aws_region, ecr_repo, docker_image_tag):
-     build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag)
+@click.option("--image-version", '-i', help="Image version to push", default="latest")
+def run(push, aws_account, aws_region, ecr_repo, docker_image_tag, image_version):
+     build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag, image_version)
 
 if __name__ == "__main__":
     run()
