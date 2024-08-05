@@ -5,6 +5,7 @@ import Tree from "../core/Tree";
 import { AnnotationMixin } from "../mixins/AnnotationMixin";
 import { isDefined } from "../utils/utilities";
 import { FF_LSDV_4583, isFF } from "../utils/feature-flags";
+import { AddressBlock } from "../tags/control/AddressManager/AddressManager";
 
 const Result = types
   .model("Result", {
@@ -28,9 +29,13 @@ const Result = types
     // ImageRegion, TextRegion, HyperTextRegion, AudioRegion)),
     // optional for classifications
     // labeling/control tag
-    from_name: types.late(() => types.reference(types.union(...Registry.modelsArr()))),
+    from_name: types.late(() =>
+      types.reference(types.union(...Registry.modelsArr()))
+    ),
     // object tag
-    to_name: types.late(() => types.reference(types.union(...Registry.objectTypes()))),
+    to_name: types.late(() =>
+      types.reference(types.union(...Registry.objectTypes()))
+    ),
     // @todo some general type, maybe just a `string`
     type: types.enumeration([
       "labels",
@@ -56,17 +61,24 @@ const Result = types
       "rating",
       "pairwise",
       "videorectangle",
-      "ranker",
+      "addressmanager",
+      "ranker"
     ]),
     // @todo much better to have just a value, not a hash with empty fields
     value: types.model({
-      ranker: types.union(types.array(types.string), types.frozen(), types.null),
+      ranker: types.union(
+        types.array(types.string),
+        types.frozen(),
+        types.null
+      ),
       datetime: types.maybe(types.string),
       number: types.maybe(types.number),
       rating: types.maybe(types.number),
       item_index: types.maybeNull(types.number),
       text: types.maybe(types.union(types.string, types.array(types.string))),
-      choices: types.maybe(types.array(types.union(types.string, types.array(types.string)))),
+      choices: types.maybe(
+        types.array(types.union(types.string, types.array(types.string)))
+      ),
       // pairwise
       selected: types.maybe(types.enumeration(["left", "right"])),
       // @todo all other *labels
@@ -81,16 +93,17 @@ const Result = types
       brushlabels: types.maybe(types.array(types.string)),
       timeserieslabels: types.maybe(types.array(types.string)),
       taxonomy: types.frozen(), // array of arrays of strings
-      sequence: types.frozen(),
+      addressmanager: types.maybe(types.array(types.frozen())),
+      sequence: types.frozen()
     }),
     // info about object and region
-    meta: types.frozen(),
+    meta: types.frozen()
   })
-  .views((self) => ({
+  .views(self => ({
     get perRegionStates() {
       const states = self.states;
 
-      return states && states.filter((s) => s.perregion === true);
+      return states && states.filter(s => s.perregion === true);
     },
 
     get store() {
@@ -107,11 +120,13 @@ const Result = types
 
     mergeMainValue(value) {
       value = value?.toJSON ? value.toJSON() : value;
-      const mainValue = self.mainValue?.toJSON?.() ? self.mainValue?.toJSON?.() : self.mainValue;
+      const mainValue = self.mainValue?.toJSON?.()
+        ? self.mainValue?.toJSON?.()
+        : self.mainValue;
 
       if (typeof value !== typeof mainValue) return null;
       if (self.type.endsWith("labels")) {
-        return value.filter((x) => mainValue.includes(x));
+        return value.filter(x => mainValue.includes(x));
       }
       return value === mainValue ? value : null;
     },
@@ -147,7 +162,11 @@ const Result = types
       if (self.mainValue?.length === 0 && self.from_name.allowempty) {
         return self.from_name.findLabel(null);
       }
-      return self.mainValue?.map((value) => self.from_name.findLabel(value)).filter(Boolean) ?? [];
+      return (
+        self.mainValue
+          ?.map(value => self.from_name.findLabel(value))
+          .filter(Boolean) ?? []
+      );
     },
 
     /**
@@ -163,15 +182,17 @@ const Result = types
       }
 
       // picks leaf's (last item in a path) value for Taxonomy or usual Choice value for Choices
-      const innerResults = (r) => r.map((s) => (Array.isArray(s) ? s.at(-1) : s));
+      const innerResults = r => r.map(s => (Array.isArray(s) ? s.at(-1) : s));
 
       const isChoiceSelected = () => {
         const tagName = control.whentagname;
         const choiceValues = control.whenchoicevalue?.split(",") ?? null;
-        const results = self.annotation.results.filter((r) => ["choices", "taxonomy"].includes(r.type) && r !== self);
+        const results = self.annotation.results.filter(
+          r => ["choices", "taxonomy"].includes(r.type) && r !== self
+        );
 
         if (tagName) {
-          const result = results.find((r) => {
+          const result = results.find(r => {
             if (r.from_name.name !== tagName) return false;
             // for perRegion choices we should check that they are in the same area
             return !r.from_name.perregion || r.area === self.area;
@@ -180,8 +201,10 @@ const Result = types
           if (!result) return false;
           if (
             choiceValues &&
-            !choiceValues.some((v) =>
-              innerResults(result.mainValue).some((vv) => result.from_name.selectedChoicesMatch(v, vv)),
+            !choiceValues.some(v =>
+              innerResults(result.mainValue).some(vv =>
+                result.from_name.selectedChoicesMatch(v, vv)
+              )
             )
           )
             return false;
@@ -190,8 +213,12 @@ const Result = types
           // if no given choice value is selected in any choice result
           if (
             choiceValues &&
-            !results.some((r) =>
-              choiceValues.some((v) => innerResults(r.mainValue).some((vv) => r.from_name.selectedChoicesMatch(v, vv))),
+            !results.some(r =>
+              choiceValues.some(v =>
+                innerResults(r.mainValue).some(vv =>
+                  r.from_name.selectedChoicesMatch(v, vv)
+                )
+              )
             )
           )
             return false;
@@ -235,7 +262,8 @@ const Result = types
       const fillcolor = emptyLabel.background || emptyLabel.parent.fillcolor;
 
       if (!fillcolor) return null;
-      const strokecolor = emptyLabel.background || emptyLabel.parent.strokecolor;
+      const strokecolor =
+        emptyLabel.background || emptyLabel.parent.strokecolor;
       const { strokewidth, fillopacity, opacity } = emptyLabel.parent;
 
       return { strokecolor, strokewidth, fillcolor, fillopacity, opacity };
@@ -244,17 +272,23 @@ const Result = types
     get controlStyle() {
       if (!self.from_name) return null;
 
-      const { fillcolor, strokecolor, strokewidth, fillopacity, opacity } = self.from_name;
+      const {
+        fillcolor,
+        strokecolor,
+        strokewidth,
+        fillopacity,
+        opacity
+      } = self.from_name;
 
       return { strokecolor, strokewidth, fillcolor, fillopacity, opacity };
-    },
+    }
   }))
   .volatile(() => ({
     pid: "",
-    selected: false,
+    selected: false
     // highlighted: types.optional(types.boolean, false),
   }))
-  .actions((self) => ({
+  .actions(self => ({
     setValue(value) {
       self.value[self.from_name.valueType] = value;
     },
@@ -284,6 +318,7 @@ const Result = types
 
     serialize(options) {
       const sn = getSnapshot(self);
+
       const { type, score, value, meta } = sn;
       const { valueType } = self.from_name;
       const data = self.area ? self.area.serialize(options) : {};
@@ -300,7 +335,8 @@ const Result = types
       if (self.to_name.mergeLabelsAndResults) {
         if (type === "labels") return null;
         // add labels to the main region, not nested ones
-        if (self.area?.labels?.length && !self.from_name.perregion) data.value.labels = self.area.labels;
+        if (self.area?.labels?.length && !self.from_name.perregion)
+          data.value.labels = self.area.labels;
       }
 
       const contolMeta = self.from_name.metaValue;
@@ -322,10 +358,24 @@ const Result = types
         data.parentID = self.area.parentID.replace(/#.*/, "");
       }
 
-      Object.assign(data, { id, from_name, to_name, type, origin: self.area.origin });
+      Object.assign(data, {
+        id,
+        from_name,
+        to_name,
+        type,
+        origin: self.area.origin
+      });
 
       if (isDefined(value[valueType])) {
         Object.assign(data.value, { [valueType]: value[valueType] });
+      }
+
+      if (type === "addressmanager") {
+        Object.assign(data.value, {
+          addressmanager: self.value.addressmanager
+            ? self.value.addressmanager.map(block => getSnapshot(block))
+            : []
+        });
       }
 
       if (typeof score === "number") data.score = score;
@@ -368,7 +418,7 @@ const Result = types
 
     toggleHidden() {
       self.hidden = !self.hidden;
-    },
+    }
   }));
 
 export default types.compose("Result", Result, AnnotationMixin);
