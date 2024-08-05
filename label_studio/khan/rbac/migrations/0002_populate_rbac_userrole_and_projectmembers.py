@@ -34,11 +34,18 @@ def populate_rbac_userrole_and_projectmembers(apps):
         ])
     logger.info("Finished creating project members")
 
+def reverse_populate(apps):
+    UserRole = apps.get_model('rbac', 'UserRole')
+    ProjectMember = apps.get_model('projects', 'ProjectMember')
+    
+    UserRole.objects.all().delete()
+    ProjectMember.objects.all().delete()
+
 def forward(apps, schema_editor):
     populate_rbac_userrole_and_projectmembers(apps)
 
 def backwards(apps, schema_editor):
-    pass
+    reverse_populate(apps)
 
 class Migration(migrations.Migration):
 
