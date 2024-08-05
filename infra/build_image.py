@@ -1,10 +1,14 @@
 import os
+import site
 import click
 import sys
 
-from infra.shared import log_message, execute
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+site.addsitedir(SCRIPT_DIR)
+
+from shared import log_message, execute
+
 IS_WINDOWS = sys.platform == 'win32'
 
 if IS_WINDOWS:
@@ -22,7 +26,7 @@ def build_docker_image(aws_account, aws_region, ecr_repo, push, docker_image_tag
 
     os.chdir(abs_dir)
     log_message("Running 'docker build'")
-    cmd = f"docker build -t {docker_image_tag} ."
+    cmd = f"docker build -t {docker_image_tag} --platform linux/amd64 ."
     execute(cmd)
 
     if push:

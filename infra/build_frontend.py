@@ -1,11 +1,15 @@
 import os
+import site
 import subprocess
 import click
 import sys
 
-from infra.shared import log_message, execute
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+site.addsitedir(SCRIPT_DIR)
+
+from shared import log_message, execute
+
 IS_WINDOWS = sys.platform == 'win32'
 
 if IS_WINDOWS:
