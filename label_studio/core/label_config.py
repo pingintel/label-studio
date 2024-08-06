@@ -251,7 +251,6 @@ def generate_sample_task_without_check(label_config, mode='upload', secure_mode=
     task = {}
     parent = xml.findall('.//*[@value]')  # take all tags with value attribute
     for p in parent:
-
         # Make sure it is a real object tag, extract data placeholder key
         value = p.get('value')
         if not value or not value.startswith('$'):

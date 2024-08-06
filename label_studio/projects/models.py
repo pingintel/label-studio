@@ -629,6 +629,8 @@ class Project(ProjectMixin, models.Model):
                 custom_tags = Label.objects.filter(links__project=self).values_list('value', flat=True)
                 flat_custom_tags = set([item for sublist in custom_tags for item in sublist])
                 labels_from_config_by_tag |= flat_custom_tags
+            if 'AddressManager' in tag_types:
+                labels_from_config_by_tag |= set(labels_from_data.keys())
             # check if labels from is subset if config labels
             if not set(labels_from_data).issubset(set(labels_from_config_by_tag)):
                 different_labels = list(set(labels_from_data).difference(labels_from_config_by_tag))

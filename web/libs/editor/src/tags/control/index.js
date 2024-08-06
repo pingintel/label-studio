@@ -12,6 +12,7 @@ import { HyperTextLabelsModel } from "./HyperTextLabels";
 import { LabelsModel } from "./Labels/Labels";
 import { ParagraphLabelsModel } from "./ParagraphLabels";
 import { TimeSeriesLabelsModel } from "./TimeSeriesLabels";
+import { AddressManagerModel } from "./AddressManager/AddressManager";
 import { VideoRectangleModel } from "./VideoRectangle";
 
 import { BrushLabelsModel } from "./BrushLabels";
@@ -39,6 +40,7 @@ export {
   ShortcutModel,
   TaxonomyModel,
   TextAreaModel,
+  AddressManagerModel,
   HyperTextLabelsModel,
   LabelsModel,
   ParagraphLabelsModel,
@@ -56,5 +58,5 @@ export {
   RectangleLabelsModel,
   RectangleModel,
   RelationsModel,
-  RelationModel,
+  RelationModel
 };

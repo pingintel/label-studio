@@ -38,7 +38,7 @@ const TagAttrs = types.model({
   classname: types.optional(types.string, ""),
   display: types.optional(types.string, "block"),
   style: types.maybeNull(types.string),
-  idattr: types.optional(types.string, ""),
+  idattr: types.optional(types.string, "")
 });
 
 const Model = types.model({
@@ -94,10 +94,18 @@ const Model = types.model({
     "video",
     "videorectangle",
     "ranker",
-  ]),
+    "addressmanager",
+    "addresstable"
+  ])
 });
 
-const ViewModel = types.compose("ViewModel", TagAttrs, Model, VisibilityMixin, AnnotationMixin);
+const ViewModel = types.compose(
+  "ViewModel",
+  TagAttrs,
+  Model,
+  VisibilityMixin,
+  AnnotationMixin
+);
 
 const HtxView = observer(({ item }) => {
   let style = {};

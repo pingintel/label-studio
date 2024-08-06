@@ -29,9 +29,9 @@ const Model = types
     type: "table",
     value: types.maybeNull(types.string),
     _value: types.frozen([]),
-    valuetype: types.optional(types.string, "json"),
+    valuetype: types.optional(types.string, "json")
   })
-  .views((self) => ({
+  .views(self => ({
     get dataSource() {
       const { type } = parseTypeAndOption(self.valuetype);
 
@@ -40,7 +40,7 @@ const Model = types
           .sort((a, b) => {
             return a.toLowerCase().localeCompare(b.toLowerCase());
           })
-          .map((k) => {
+          .map(k => {
             let val = self._value[k];
 
             if (typeof val === "object") val = JSON.stringify(val);
@@ -53,14 +53,17 @@ const Model = types
       if (self.valuetype === "json" || !self._value[0]) {
         return [
           { title: "Name", dataIndex: "type" },
-          { title: "Value", dataIndex: "value" },
+          { title: "Value", dataIndex: "value" }
         ];
       }
-      return Object.keys(self._value[0]).map((value) => ({ title: value, dataIndex: value }));
-    },
+      return Object.keys(self._value[0]).map(value => ({
+        title: value,
+        dataIndex: value
+      }));
+    }
   }))
-  .actions((self) => ({
-    updateValue: flow(function* (store) {
+  .actions(self => ({
+    updateValue: flow(function*(store) {
       const { type, options } = parseTypeAndOption(self.valuetype);
       let originData = parseValue(self.value, store.task.dataObj);
 
@@ -76,7 +79,7 @@ const Model = types
           const message = getEnv(self).messages.ERR_LOADING_HTTP({
             attr: self.value,
             error: String(error),
-            url: originData,
+            url: originData
           });
 
           self.annotationStore.addErrors([errorBuilder.generalError(message)]);
@@ -92,25 +95,39 @@ const Model = types
               download: false,
               complete: ({ data }) => {
                 self._value = data;
-              },
+              }
             });
           }
           break;
         default:
-          self._value = typeof originData === "string" ? JSON.parse(originData) : originData;
+          self._value =
+            typeof originData === "string"
+              ? JSON.parse(originData)
+              : originData;
           break;
       }
-    }),
+    })
   }));
 
-const TableModel = types.compose("TableModel", Base, ProcessAttrsMixin, AnnotationMixin, Model);
+const TableModel = types.compose(
+  "TableModel",
+  Base,
+  ProcessAttrsMixin,
+  AnnotationMixin,
+  Model
+);
 
 const HtxTable = inject("store")(
   observer(({ item }) => {
     return (
-      <Table bordered dataSource={item.dataSource} columns={item.columns} pagination={{ hideOnSinglePage: true }} />
+      <Table
+        bordered
+        dataSource={item.dataSource}
+        columns={item.columns}
+        pagination={{ hideOnSinglePage: true }}
+      />
     );
-  }),
+  })
 );
 
 Registry.addTag("table", TableModel, HtxTable);

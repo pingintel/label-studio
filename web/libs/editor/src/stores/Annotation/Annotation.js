@@ -1,5 +1,15 @@
 import throttle from "lodash.throttle";
-import { destroy, detach, flow, getEnv, getParent, getRoot, isAlive, onSnapshot, types } from "mobx-state-tree";
+import {
+  destroy,
+  detach,
+  flow,
+  getEnv,
+  getParent,
+  getRoot,
+  isAlive,
+  onSnapshot,
+  types
+} from "mobx-state-tree";
 import Constants from "../../core/Constants";
 import { errorBuilder } from "../../core/DataValidator/ConfigValidator";
 import { guidGenerator } from "../../core/Helpers";
@@ -22,7 +32,7 @@ import {
   FF_LSDV_4832,
   FF_LSDV_4988,
   FF_REVIEWER_FLOW,
-  isFF,
+  isFF
 } from "../../utils/feature-flags";
 import { delay, isDefined } from "../../utils/utilities";
 import { CommentStore } from "../Comment/CommentStore";
@@ -88,7 +98,7 @@ const hotkeys = Hotkey("Annotations", "Annotations");
 function omitValueFields(value) {
   const newValue = { ...value };
 
-  Result.properties.value.propertyNames.forEach((propName) => {
+  Result.properties.value.propertyNames.forEach(propName => {
     delete newValue[propName];
   });
   return newValue;
@@ -96,7 +106,7 @@ function omitValueFields(value) {
 
 const TrackedState = types.model("TrackedState", {
   areas: types.map(Area),
-  relationStore: types.optional(RelationStore, {}),
+  relationStore: types.optional(RelationStore, {})
 });
 
 export const Annotation = types
@@ -114,7 +124,10 @@ export const Annotation = types
     createdDate: types.optional(types.string, Utils.UDate.currentISODate()),
     createdAgo: types.maybeNull(types.string),
     createdBy: types.optional(types.string, "Admin"),
-    user: types.optional(types.maybeNull(types.safeReference(UserExtended)), null),
+    user: types.optional(
+      types.maybeNull(types.safeReference(UserExtended)),
+      null
+    ),
 
     parent_prediction: types.maybeNull(types.integer),
     parent_annotation: types.maybeNull(types.integer),
@@ -154,31 +167,31 @@ export const Annotation = types
     suggestions: types.map(Area),
 
     regionStore: types.optional(RegionStore, {
-      regions: [],
+      regions: []
     }),
 
     isDrawing: types.optional(types.boolean, false),
 
     commentStore: types.optional(CommentStore, {
-      comments: [],
+      comments: []
     }),
 
-    ...(isFF(FF_DEV_3391) ? { root: Types.allModelsTypes() } : {}),
+    ...(isFF(FF_DEV_3391) ? { root: Types.allModelsTypes() } : {})
   })
-  .views((self) => ({
+  .views(self => ({
     get areas() {
       return self.trackedState.areas;
     },
     get relationStore() {
       return self.trackedState.relationStore;
-    },
+    }
   }))
-  .preProcessSnapshot((sn) => {
+  .preProcessSnapshot(sn => {
     // sn.draft = Boolean(sn.draft);
     let user = sn.user ?? sn.completed_by ?? undefined;
     let root;
 
-    const updateIds = (item) => {
+    const updateIds = item => {
       const children = item.children?.map(updateIds);
 
       if (children) item = { ...item, children };
@@ -205,10 +218,10 @@ export const Annotation = types
       editable: sn.editable ?? sn.type === "annotation",
       ground_truth: sn.honeypot ?? sn.ground_truth ?? false,
       skipped: sn.skipped || sn.was_cancelled,
-      acceptedState: sn.accepted_state ?? sn.acceptedState ?? null,
+      acceptedState: sn.accepted_state ?? sn.acceptedState ?? null
     };
   })
-  .views((self) =>
+  .views(self =>
     isFF(FF_DEV_3391)
       ? {}
       : {
@@ -222,10 +235,10 @@ export const Annotation = types
 
           get toNames() {
             return self.list.toNames;
-          },
-        },
+          }
+        }
   )
-  .views((self) => ({
+  .views(self => ({
     get store() {
       return getRoot(self);
     },
@@ -237,7 +250,7 @@ export const Annotation = types
     get objects() {
       // Without correct validation toname may be null for control tags so we need to check isObjectTag instead of it
       return Array.from(self.names.values()).filter(
-        isFF(FF_DEV_1598) ? (tag) => tag.isObjectTag : (tag) => !tag.toname,
+        isFF(FF_DEV_1598) ? tag => tag.isObjectTag : tag => !tag.toname
       );
     },
 
@@ -252,7 +265,8 @@ export const Annotation = types
     get results() {
       const results = [];
 
-      if (isAlive(self)) self.areas.forEach((a) => a.results.forEach((r) => results.push(r)));
+      if (isAlive(self))
+        self.areas.forEach(a => a.results.forEach(r => results.push(r)));
       return results;
     },
 
@@ -261,7 +275,7 @@ export const Annotation = types
       self.areas.toJSON();
 
       return self.results
-        .map((r) => r.serialize())
+        .map(r => r.serialize())
         .filter(Boolean)
         .concat(self.relationStore.serialize());
     },
@@ -272,14 +286,14 @@ export const Annotation = types
 
       const selectedResults = [];
 
-      self.areas.forEach((a) => {
+      self.areas.forEach(a => {
         if (!a.inSelection) return;
-        a.results.forEach((r) => {
+        a.results.forEach(r => {
           selectedResults.push(r);
         });
       });
 
-      return selectedResults.map((r) => r.serialize()).filter(Boolean);
+      return selectedResults.map(r => r.serialize()).filter(Boolean);
     },
 
     get highlightedNode() {
@@ -303,21 +317,23 @@ export const Annotation = types
 
     // existing annotation which can be updated
     get exists() {
-      const dataExists = (self.userGenerate && self.sentUserGenerate) || isDefined(self.versions.result);
+      const dataExists =
+        (self.userGenerate && self.sentUserGenerate) ||
+        isDefined(self.versions.result);
       const pkExists = isDefined(self.pk);
 
       return dataExists && pkExists;
     },
 
     get hasSuggestionsSupport() {
-      return self.objects.some((obj) => {
+      return self.objects.some(obj => {
         return obj.supportSuggestions;
       });
     },
 
     isReadOnly() {
       return self.readonly || !self.editable;
-    },
+    }
   }))
   .volatile(() => ({
     hidden: false,
@@ -329,18 +345,18 @@ export const Annotation = types
     isSuggestionsAccepting: false,
     submissionStarted: 0,
     versions: {},
-    resultSnapshot: "",
+    resultSnapshot: ""
   }))
   .volatile(() =>
     isFF(FF_DEV_3391)
       ? {
           names: new Map(),
           toNames: new Map(),
-          ids: new Map(),
+          ids: new Map()
         }
-      : {},
+      : {}
   )
-  .views((self) => ({
+  .views(self => ({
     // experiment to display review buttons in Quick View
     get canBeReviewed() {
       const store = self.store;
@@ -357,9 +373,9 @@ export const Annotation = types
         // annotation was submitted already
         !isNaN(self.pk)
       );
-    },
+    }
   }))
-  .actions((self) => ({
+  .actions(self => ({
     reinitHistory(force = true) {
       self.history.reinit(force);
       self.autosave && self.autosave.cancel();
@@ -391,7 +407,7 @@ export const Annotation = types
 
       if (root && root !== self && ivokeEvent) {
         const as = root.annotationStore;
-        const assignGroundTruths = (p) => {
+        const assignGroundTruths = p => {
           if (self !== p) p.setGroundTruth(false, false);
         };
 
@@ -465,26 +481,27 @@ export const Annotation = types
     },
 
     hideSelectedRegions() {
-      self.selectedRegions.forEach((region) => {
+      self.selectedRegions.forEach(region => {
         region.toggleHidden();
       });
     },
 
     deleteSelectedRegions() {
-      self.selectedRegions.forEach((region) => {
+      self.selectedRegions.forEach(region => {
         region.deleteRegion();
       });
     },
 
     unselectStates() {
-      self.names.forEach((tag) => tag.unselectAll && tag.unselectAll());
+      self.names.forEach(tag => tag.unselectAll && tag.unselectAll());
     },
 
     /**
      * @param {boolean} tryToKeepStates don't unselect labels if such setting is enabled
      */
     unselectAll(tryToKeepStates = false) {
-      const keepStates = tryToKeepStates && self.store.settings.continuousLabeling;
+      const keepStates =
+        tryToKeepStates && self.store.settings.continuousLabeling;
 
       self.unselectAreas();
       if (!keepStates) self.unselectStates();
@@ -519,7 +536,7 @@ export const Annotation = types
         self.setIsDrawing(false);
         self.relationStore.deleteAllRelations();
 
-        regions.forEach((r) => {
+        regions.forEach(r => {
           r.destroyRegion?.();
           destroy(r);
         });
@@ -529,9 +546,10 @@ export const Annotation = types
         return;
       }
 
-      if (deleteReadOnly === false) regions = regions.filter((r) => r.readonly === false);
+      if (deleteReadOnly === false)
+        regions = regions.filter(r => r.readonly === false);
 
-      regions.forEach((r) => r.deleteRegion());
+      regions.forEach(r => r.deleteRegion());
       self.updateObjects();
     },
 
@@ -546,7 +564,7 @@ export const Annotation = types
 
     unloadRegionState(region) {
       region.states &&
-        region.states.forEach((s) => {
+        region.states.forEach(s => {
           const mainViewTag = self.names.get(s.name);
 
           mainViewTag.unselectAll && mainViewTag.unselectAll();
@@ -561,7 +579,7 @@ export const Annotation = types
     validate() {
       let ok = true;
 
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         ok = node.validate?.();
         if (ok === false) {
           return TRAVERSE_STOP;
@@ -580,7 +598,7 @@ export const Annotation = types
      *
      */
     beforeSend() {
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         if (node && node.beforeSend) {
           node.beforeSend();
         }
@@ -599,11 +617,12 @@ export const Annotation = types
 
       const { regions } = self.regionStore;
       // move all children into the parent region of the given one
-      const children = regions.filter((r) => r.parentID === region.id);
+      const children = regions.filter(r => r.parentID === region.id);
 
-      children && children.forEach((r) => r.setParentID(region.parentID));
+      children && children.forEach(r => r.setParentID(region.parentID));
 
-      if (!region.classification) getEnv(self).events.invoke("entityDelete", region);
+      if (!region.classification)
+        getEnv(self).events.invoke("entityDelete", region);
 
       self.relationStore.deleteNodeRelation(region);
 
@@ -629,7 +648,8 @@ export const Annotation = types
         let stopDrawingAfterNextUndo = false;
         const selectedIds = regionStore.selectedIds;
         const currentRegion = regionStore.findRegion(
-          selectedIds[selectedIds.length - 1] ?? regionStore.regions[regionStore.regions.length - 1]?.id,
+          selectedIds[selectedIds.length - 1] ??
+            regionStore.regions[regionStore.regions.length - 1]?.id
         );
 
         if (currentRegion?.type === "polygonregion") {
@@ -668,11 +688,14 @@ export const Annotation = types
       // Some async or lazy mode operations (ie. Images lazy load) need to reinitHistory without removing state selections
       if (force) self.unselectAll();
 
-      self.names.forEach((tag) => tag.needsUpdate && tag.needsUpdate());
-      self.areas.forEach((area) => area.updateAppearenceFromState && area.updateAppearenceFromState());
+      self.names.forEach(tag => tag.needsUpdate && tag.needsUpdate());
+      self.areas.forEach(
+        area =>
+          area.updateAppearenceFromState && area.updateAppearenceFromState()
+      );
       if (isFF(FF_DEV_2432)) {
         const areas = Array.from(self.areas.values());
-        const filtered = areas.filter((area) => area.isDrawing);
+        const filtered = areas.filter(area => area.isDrawing);
 
         self.regionStore.selection._updateResultsFromRegions(filtered);
       }
@@ -680,10 +703,12 @@ export const Annotation = types
 
     setInitialValues() {
       // <Label selected="true"/>
-      self.names.forEach((tag) => {
+      self.names.forEach(tag => {
         if (tag.type.endsWith("labels")) {
           // @todo check for choice="multiple" and multiple preselected labels
-          const preselected = tag.children?.find((label) => label.initiallySelected);
+          const preselected = tag.children?.find(
+            label => label.initiallySelected
+          );
 
           if (preselected) preselected.setSelected(true);
         }
@@ -693,10 +718,18 @@ export const Annotation = types
     },
 
     setDefaultValues() {
-      self.names.forEach((tag) => {
-        if (["choices", "taxonomy"].includes(tag?.type) && tag.preselectedValues?.length) {
+      self.names.forEach(tag => {
+        if (
+          ["choices", "taxonomy"].includes(tag?.type) &&
+          tag.preselectedValues?.length
+        ) {
           // <Choice selected="true"/>
-          self.createResult({}, { [tag?.type]: tag.preselectedValues }, tag, tag.toname);
+          self.createResult(
+            {},
+            { [tag?.type]: tag.preselectedValues },
+            tag,
+            tag.toname
+          );
         }
       });
     },
@@ -733,7 +766,7 @@ export const Annotation = types
       self.startAutosave();
     },
 
-    startAutosave: flow(function* () {
+    startAutosave: flow(function*() {
       if (!getEnv(self).events.hasEvent("submitDraft")) return;
       // view all must never trigger autosave
       if (self.isReadOnly()) return;
@@ -757,7 +790,7 @@ export const Annotation = types
           self.saveDraft();
         },
         self.autosaveDelay,
-        { leading: false },
+        { leading: false }
       );
 
       onSnapshot(self.areas, self.autosave);
@@ -777,7 +810,7 @@ export const Annotation = types
       self.setDraftSelected();
       self.versions.draft = result;
       self.setDraftSaving(true);
-      return self.store.submitDraft(self, params).then((res) => {
+      return self.store.submitDraft(self, params).then(res => {
         self.onDraftSaved(res);
 
         return res;
@@ -842,7 +875,7 @@ export const Annotation = types
     },
 
     afterAttach() {
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         // called when the annotation is attached to the main store,
         // at this point the whole tree is available. This method
         // may come handy when you have a tag that acts or depends
@@ -861,7 +894,7 @@ export const Annotation = types
         names.forEach((tag, name) => self.names.set(name, tag));
         toNames.forEach((tags, name) => self.toNames.set(name, tags));
 
-        Tree.traverseTree(self.root, (node) => {
+        Tree.traverseTree(self.root, node => {
           const id = node.id ?? node.name;
 
           if (id) {
@@ -887,27 +920,41 @@ export const Annotation = types
 
       // [TODO] we need to traverse this two times, fix
       // Hotkeys setup
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         if (node && node.onHotKey && node.hotkey) {
-          hotkeys.addKey(node.hotkey, node.onHotKey, undefined, node.hotkeyScope);
+          hotkeys.addKey(
+            node.hotkey,
+            node.onHotKey,
+            undefined,
+            node.hotkeyScope
+          );
         }
       });
 
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         // add Space hotkey for playbacks of audio, there might be
         // multiple audios on the screen
-        if (node && !node.hotkey && (node.type === "audio" || node.type === "audioplus")) {
+        if (
+          node &&
+          !node.hotkey &&
+          (node.type === "audio" || node.type === "audioplus")
+        ) {
           if (audiosNum > 0) comb = `${mod}+${audiosNum + 1}`;
           else audioNode = node;
 
           node.hotkey = comb;
-          hotkeys.addKey(comb, node.onHotKey, "Play an audio", `${Hotkey.DEFAULT_SCOPE},${Hotkey.INPUT_SCOPE}`);
+          hotkeys.addKey(
+            comb,
+            node.onHotKey,
+            "Play an audio",
+            `${Hotkey.DEFAULT_SCOPE},${Hotkey.INPUT_SCOPE}`
+          );
 
           audiosNum++;
         }
       });
 
-      self.traverseTree((node) => {
+      self.traverseTree(node => {
         /**
          * Hotkey for controls
          */
@@ -941,7 +988,13 @@ export const Annotation = types
       Hotkey.setScope(Hotkey.DEFAULT_SCOPE);
     },
 
-    createResult(areaValue, resultValue, control, object, skipAfrerCreate = false) {
+    createResult(
+      areaValue,
+      resultValue,
+      control,
+      object,
+      skipAfrerCreate = false
+    ) {
       // Without correct validation object may be null, but it it shouldn't be so in results - so we should find any
       if (isFF(FF_DEV_1598) && !object && control.type === "textarea") {
         object = self.objects[0];
@@ -954,7 +1007,7 @@ export const Annotation = types
         to_name: objectTag,
         type: control.resultType,
         value: resultValue,
-        readonly: self.readonly,
+        readonly: self.readonly
       };
 
       const areaRaw = {
@@ -964,7 +1017,7 @@ export const Annotation = types
         ...areaValue,
         // for Model detection
         value: areaValue,
-        results: [result],
+        results: [result]
       };
 
       // TODO: MST is crashing if we don't validate areas?, this problem isn't
@@ -1021,7 +1074,7 @@ export const Annotation = types
       document.body.style.cursor = "wait";
 
       const result = self.results
-        .map((r) => r.serialize(options))
+        .map(r => r.serialize(options))
         .filter(Boolean)
         .concat(self.relationStore.serialize(options));
 
@@ -1042,7 +1095,8 @@ export const Annotation = types
         }
 
         if (obj.type === "htmllabels") obj.type = "hypertextlabels";
-        if (obj.normalization) obj.meta = { ...obj.meta, text: [obj.normalization] };
+        if (obj.normalization)
+          obj.meta = { ...obj.meta, text: [obj.normalization] };
         const tagNames = self.names;
 
         // Clear non-existent labels
@@ -1051,19 +1105,28 @@ export const Annotation = types
 
           for (let key of keys) {
             if (key.endsWith("labels")) {
-              const hasControlTag = tagNames.has(obj.from_name) || tagNames.has("labels");
+              const hasControlTag =
+                tagNames.has(obj.from_name) || tagNames.has("labels");
 
               // remove non-existent labels, it actually breaks dynamic labels
               // and makes no reason overall — labels from predictions can be out of config
               if (!isFF(FF_LSDV_4988) && hasControlTag) {
-                const labelsContainer = tagNames.get(obj.from_name) ?? tagNames.get("labels");
+                const labelsContainer =
+                  tagNames.get(obj.from_name) ?? tagNames.get("labels");
                 const value = obj.value[key];
 
-                if (value && value.length && labelsContainer.type.endsWith("labels")) {
-                  const filteredValue = value.filter((labelName) => !!labelsContainer.findLabel(labelName));
+                if (
+                  value &&
+                  value.length &&
+                  labelsContainer.type.endsWith("labels")
+                ) {
+                  const filteredValue = value.filter(
+                    labelName => !!labelsContainer.findLabel(labelName)
+                  );
                   const oldKey = key;
 
-                  key = key === labelsContainer.type ? key : labelsContainer.type;
+                  key =
+                    key === labelsContainer.type ? key : labelsContainer.type;
 
                   if (oldKey !== key) {
                     obj.type = key;
@@ -1080,7 +1143,11 @@ export const Annotation = types
               // detect most relevant label tags if that one from from_name is missing
               // can be useful for predictions in old format with config in new format:
               // Rectangle + Labels -> RectangleLabels
-              if (!tagNames.has(obj.from_name) || (!obj.value[key].length && !tagNames.get(obj.from_name).allowempty)) {
+              if (
+                !tagNames.has(obj.from_name) ||
+                (!obj.value[key].length &&
+                  !tagNames.get(obj.from_name).allowempty)
+              ) {
                 delete obj.value[key];
                 if (tagNames.has(obj.to_name)) {
                   // Redirect references to existent tool
@@ -1089,12 +1156,21 @@ export const Annotation = types
                   const states = self.toNames.get(targetObject.name);
 
                   if (states?.length) {
-                    const altToolsControllerType = obj.type.replace(/labels$/, "");
+                    const altToolsControllerType = obj.type.replace(
+                      /labels$/,
+                      ""
+                    );
                     const sameLabelsType = obj.type;
                     const simpleLabelsType = "labels";
 
-                    for (const altType of [altToolsControllerType, sameLabelsType, simpleLabelsType]) {
-                      const state = states.find((state) => state.type === altType);
+                    for (const altType of [
+                      altToolsControllerType,
+                      sameLabelsType,
+                      simpleLabelsType
+                    ]) {
+                      const state = states.find(
+                        state => state.type === altType
+                      );
 
                       if (state) {
                         obj.type = altType;
@@ -1141,7 +1217,7 @@ export const Annotation = types
 
       if (!rawSuggestions) return;
       self.deserializeResults(rawSuggestions, {
-        suggestions: true,
+        suggestions: true
       });
 
       self.isSuggestionsAccepting = true;
@@ -1151,7 +1227,7 @@ export const Annotation = types
         }
         self.acceptAllSuggestions();
       } else {
-        self.suggestions.forEach((suggestion) => {
+        self.suggestions.forEach(suggestion => {
           // regions that can't be accepted in usual way, should be auto-accepted;
           const supportSuggestions = suggestion.supportSuggestions;
 
@@ -1170,7 +1246,7 @@ export const Annotation = types
       if (!isFF(FF_DEV_1284)) {
         history.freeze("richtext:suggestions");
       }
-      self.names.forEach((tag) => tag.needsUpdate?.({ suggestions: true }));
+      self.names.forEach(tag => tag.needsUpdate?.({ suggestions: true }));
       if (!isFF(FF_DEV_1284)) {
         history.setReplaceNextUndoState(true);
         history.unfreeze("richtext:suggestions");
@@ -1181,20 +1257,23 @@ export const Annotation = types
       const classificationAreasByControlName = {};
       const duplicateAreaIds = [];
 
-      self.areas.forEach((a) => {
+      self.areas.forEach(a => {
         const controlName = a.results[0].from_name.name;
         // May be null but null is also valid key in this case
         const itemIndex = a.item_index;
 
         if (a.classification) {
           if (classificationAreasByControlName[controlName]?.[itemIndex]) {
-            duplicateAreaIds.push(classificationAreasByControlName[controlName][itemIndex]);
+            duplicateAreaIds.push(
+              classificationAreasByControlName[controlName][itemIndex]
+            );
           }
-          classificationAreasByControlName[controlName] = classificationAreasByControlName[controlName] || {};
+          classificationAreasByControlName[controlName] =
+            classificationAreasByControlName[controlName] || {};
           classificationAreasByControlName[controlName][itemIndex] = a.id;
         }
       });
-      duplicateAreaIds.forEach((id) => self.areas.delete(id));
+      duplicateAreaIds.forEach(id => self.areas.delete(id));
     },
 
     /**
@@ -1211,11 +1290,14 @@ export const Annotation = types
 
         self._initialAnnotationObj = objAnnotation;
 
-        objAnnotation.forEach((obj) => {
+        console.log("objAnnotation");
+        console.log(objAnnotation);
+
+        objAnnotation.forEach(obj => {
           self.deserializeSingleResult(
             obj,
-            (id) => areas.get(id),
-            (snapshot) => areas.put(snapshot),
+            id => areas.get(id),
+            snapshot => areas.put(snapshot)
           );
         });
 
@@ -1223,15 +1305,17 @@ export const Annotation = types
         if (isFF(FF_DEV_2100)) self.cleanClassificationAreas();
 
         !hidden &&
-          self.results.filter((r) => r.area.classification).forEach((r) => r.from_name.updateFromResult?.(r.mainValue));
+          self.results
+            .filter(r => r.area.classification)
+            .forEach(r => r.from_name.updateFromResult?.(r.mainValue));
 
-        objAnnotation.forEach((obj) => {
+        objAnnotation.forEach(obj => {
           if (obj.type === "relation") {
             self.relationStore.deserializeRelation(
               `${obj.from_id}#${self.id}`,
               `${obj.to_id}#${self.id}`,
               obj.direction,
-              obj.labels,
+              obj.labels
             );
           }
         });
@@ -1242,7 +1326,9 @@ export const Annotation = types
     },
 
     deserializeAnnotation(...args) {
-      console.warn("deserializeAnnotation() is deprecated. Use deserializeResults() instead");
+      console.warn(
+        "deserializeAnnotation() is deprecated. Use deserializeResults() instead"
+      );
       return self.deserializeResults(...args);
     },
 
@@ -1269,7 +1355,17 @@ export const Annotation = types
         // avoid duplicates of the same areas in different annotations/predictions
         const areaId = `${id || guidGenerator()}#${self.id}`;
         const resultId = `${data.from_name}@${areaId}`;
-        const value = self.prepareValue(rawValue, tagType);
+
+        // Special handling for addressmanager type
+        let value = rawValue;
+        if (type === "addressmanager" && rawValue.addressmanager) {
+          const addressmanager_array = Array.isArray(rawValue.addressmanager)
+            ? rawValue.addressmanager
+            : Object.values(rawValue.addressmanager);
+          value = { addressmanager: addressmanager_array };
+        } else {
+          value = self.prepareValue(rawValue, tagType);
+        }
 
         if (isFF(FF_DEV_3391)) {
           to_name = `${to_name}@${self.id}`;
@@ -1287,7 +1383,7 @@ export const Annotation = types
             // if we don't it can create a classification instead of proper area
             /** @see `omitValueFields` */
             ...omitValueFields(value),
-            value,
+            value
           };
 
           area = createArea(areaSnapshot);
@@ -1298,12 +1394,21 @@ export const Annotation = types
             // updating it from current/actual data
             // For safety reasons this object is always readonly
             Object.defineProperty(area, "_rawResult", {
-              value: Object.freeze(structuredClone(obj)),
+              value: Object.freeze(structuredClone(obj))
             });
           }
         }
 
-        const newResult = { ...data, id: resultId, type, value, from_name, to_name };
+        const newResult = {
+          ...data,
+          id: resultId,
+          type,
+          value,
+          from_name,
+          to_name
+        };
+
+        console.log("newResult", newResult);
 
         area.addResult(newResult);
         // apply additional data, that were skipped in favour of region type detection
@@ -1311,14 +1416,22 @@ export const Annotation = types
 
         // if there is merged result with region data and type and also with the labels
         // and object allows such merge — create new result with these labels
-        if (!type.endsWith("labels") && value.labels && object.mergeLabelsAndResults) {
+        if (
+          !type.endsWith("labels") &&
+          value.labels &&
+          object.mergeLabelsAndResults
+        ) {
           const labels = value.labels;
-          const controls = self.toNames.get(object.name).filter((s) => s.type.endsWith("labels"));
-          const labelControl = controls.find((control) => control?.findLabel(labels[0]));
+          const controls = self.toNames
+            .get(object.name)
+            .filter(s => s.type.endsWith("labels"));
+          const labelControl = controls.find(control =>
+            control?.findLabel(labels[0])
+          );
 
           if (labelControl) {
             area.setValue(labelControl);
-            area.results.find((r) => r.type.endsWith("labels"))?.setValue(labels);
+            area.results.find(r => r.type.endsWith("labels"))?.setValue(labels);
           }
         }
       }
@@ -1330,7 +1443,8 @@ export const Annotation = types
         case "hypertext":
         case "richtext": {
           const hasStartEnd = isDefined(value.start) && isDefined(value.end);
-          const lacksOffsets = !isDefined(value.startOffset) && !isDefined(value.endOffset);
+          const lacksOffsets =
+            !isDefined(value.startOffset) && !isDefined(value.endOffset);
 
           // @todo move this Text regions offsets transform to RichTextRegion
           if (hasStartEnd && lacksOffsets) {
@@ -1339,7 +1453,7 @@ export const Annotation = types
               end: "",
               startOffset: Number(value.start),
               endOffset: Number(value.end),
-              isText: true,
+              isText: true
             });
           }
           break;
@@ -1352,21 +1466,21 @@ export const Annotation = types
     },
 
     acceptAllSuggestions() {
-      Array.from(self.suggestions.keys()).forEach((id) => {
+      Array.from(self.suggestions.keys()).forEach(id => {
         self.acceptSuggestion(id);
       });
       self.deleteAllDynamicregions(isFF(FF_DEV_1284));
     },
 
     rejectAllSuggestions() {
-      Array.from(self.suggestions.keys()).forEach((id) => {
+      Array.from(self.suggestions.keys()).forEach(id => {
         self.suggestions.delete(id);
       });
       self.deleteAllDynamicregions(isFF(FF_DEV_1284));
     },
 
     deleteAllDynamicregions(silent = false) {
-      self.regions.forEach((r) => {
+      self.regions.forEach(r => {
         if (r.dynamic) {
           if (silent) {
             // dirty hack to prevent sending regionFinishedDrawing notification
@@ -1417,12 +1531,12 @@ export const Annotation = types
       self.areas.set(itemId, {
         ...item.toJSON(),
         id: itemId,
-        fromSuggestion: true,
+        fromSuggestion: true
       });
       const area = self.areas.get(itemId);
       const activeStates = area.object.activeStates();
 
-      activeStates.forEach((state) => {
+      activeStates.forEach(state => {
         area.setValue(state);
       });
       self.suggestions.delete(id);
@@ -1433,7 +1547,7 @@ export const Annotation = types
     },
 
     resetReady() {
-      self.objects.forEach((object) => object.setReady && object.setReady(false));
-      self.areas.forEach((area) => area.setReady && area.setReady(false));
-    },
+      self.objects.forEach(object => object.setReady && object.setReady(false));
+      self.areas.forEach(area => area.setReady && area.setReady(false));
+    }
   }));

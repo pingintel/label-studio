@@ -1,0 +1,15 @@
+.faq-button-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--grape_700);
+
+  span {
+    font-size: 26px;
+  }
+
+  &:hover {
+    color: var(--grape_500);
+  }
+}
