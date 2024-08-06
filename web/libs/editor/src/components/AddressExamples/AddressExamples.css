@@ -1,0 +1,63 @@
+.head {
+  background-color: #cecece;
+  font-weight: bold;
+  text-align: center;
+}
+
+.notes > td {
+  border-bottom: 2px solid black;
+  text-align: center;
+}
+
+.notes p {
+  margin: 0 0 3px 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 20px;
+  border: 1px dotted black;
+  border-radius: 5px;
+}
+
+.format-examples th {
+  border: 1px solid white;
+}
+
+.format-examples th.head.small {
+  word-wrap: break-word;
+  max-width: 150px;
+}
+
+.format-examples td {
+  padding: 2px 10px;
+}
+
+.format-examples {
+  border-collapse: collapse;
+}
+
+.format-examples tr:nth-child(2n of :not(.notes)) {
+  background: rgb(240, 240, 240);
+}
+
+.format-examples tr:nth-child(2n of .notes) {
+  background: rgb(240, 240, 240);
+}
+
+.notes {
+  font-size: 0.75em;
+}
+
+.outputs {
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outputs > li {
+  margin: 0 0 15px 0;
+}
+
+.output-title {
+  padding-top: 1em;
+}

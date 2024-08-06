@@ -1,4 +1,6 @@
 .address-manager
+  margin-top: 10px
+  
   &__controls
     display: flex
     margin-bottom: 10px
@@ -18,7 +20,148 @@
     flex-direction: column
 
   &__block
-    padding: 5px
+    padding: 2px
     margin-bottom: 5px
     background-color: #f9f9f9
+    height: 80px
     border: 1px solid #ddd
+    display: flex
+
+  &__move-buttons-container
+    display: flex
+    width: 15%
+    height: max
+    gap: 2px
+
+  &__move-button
+    width: 100px
+    text-align: center
+    display: flex
+    justify-content: center
+    align-items: center
+    background-color: #f0f0f0
+    border: 1px solid #ccc
+    cursor: pointer
+    &:hover
+      background-color: #e0e0e0 
+
+  &__control-buttons-container
+    display: flex
+    flex-direction: column
+    width: 15%
+    height: max
+    gap: 2px
+
+  &__control-button
+    width: max
+    flex: 1
+    text-align: center
+    display: flex
+    justify-content: center
+    align-items: center
+    background-color: #f0f0f0
+    border: 1px solid #ccc
+    cursor: pointer
+    &:hover
+      background-color: #e0e0e0      
+  
+  &__address-inputs-container
+    display:flex
+    flex-direction: column
+    gap: 2px
+    padding: 0 2px
+    width: 55vw
+
+  &__address-row
+    display: flex
+    gap: 2px
+    height: 50%
+
+  &__input-container-state-input
+    position: relative
+    width: 20%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+
+  &__input-container-country-input
+    position: relative
+    width: 40%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+
+  &__input-container-street-input
+    position: relative
+    width: 35%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+
+  &__input-container-unit-input
+    position: relative
+    width: 15%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+  
+  &__input-container-city-input
+    position: relative
+    width: 20%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+
+  &__input-container-place-name-input
+    position: relative
+    width: 30%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%   
+
+  &__input-container-zip-input
+    position: relative
+    width: 15%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%
+
+  &__input-container-county-input
+    position: relative
+    width: 25%
+
+    input
+      padding: 5px
+      border: 1px solid #ccc
+      border-radius: 3px
+      width: 100%   
+
+  &__info
+    position: absolute
+    bottom: -2px
+    right: -2px
+    padding: 1px 2px
+    font-size: 10px
+    color: white
+    background-color: var(--grape_700)

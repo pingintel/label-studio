@@ -373,7 +373,7 @@ const Result = types
       if (type === "addressmanager") {
         Object.assign(data.value, {
           addressmanager: self.value.addressmanager
-            ? self.value.addressmanager.map(block => getSnapshot(block))
+            ? self.value.addressmanager
             : []
         });
       }

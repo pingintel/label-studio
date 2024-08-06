@@ -1,0 +1,12 @@
+.copySpan {
+  cursor: pointer;
+  transition: font-weight 0.3s ease, text-decoration 0.3s ease;
+}
+
+.copySpan:hover {
+  font-weight: bold;
+  /* text underline */
+  text-decoration: underline;
+  background: #f0f0f0;
+  color: black;
+}

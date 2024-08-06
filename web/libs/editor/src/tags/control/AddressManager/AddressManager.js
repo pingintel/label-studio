@@ -8,11 +8,11 @@ import Input from "antd/lib/input/index";
 import "./AddressManager.styl";
 import { AnnotationMixin } from "../../../mixins/AnnotationMixin";
 import ClassificationBase from "../ClassificationBase";
-import ProcessAttrsMixin from "libs/editor/src/mixins/ProcessAttrs";
 import RequiredMixin from "libs/editor/src/mixins/Required";
 import PerRegionMixin from "libs/editor/src/mixins/PerRegion";
 import { ReadOnlyControlMixin } from "libs/editor/src/mixins/ReadOnlyMixin";
 import TextArea from "antd/lib/input/TextArea";
+import { AddressInput } from "libs/editor/src/components/AddressInput/AddressInput";
 
 const TagAttrs = types.model({
   toname: types.maybeNull(types.string)
@@ -69,6 +69,50 @@ const Model = types
         destroy(lastBlock);
       }
     },
+    removeBlock(index) {
+      if (self.blocks.length > 0) {
+        const block = self.blocks[index];
+        self.blocks.splice(index, 1);
+        destroy(block);
+        self.onChange();
+      }
+    },
+    duplicateBlock(index) {
+      const block = self.blocks[index];
+      const new_block = AddressBlock.create({
+        street: block.street,
+        unit: block.unit,
+        city: block.city,
+        placeName: block.placeName,
+        state: block.state,
+        zip: block.zip,
+        county: block.county,
+        country: block.country
+      });
+
+      self.blocks.splice(index + 1, 0, new_block);
+      self.onChange();
+    },
+    moveUp(index) {
+      if (index > 0) {
+        const block = self.blocks[index];
+        const newBlocks = self.blocks.slice();
+        newBlocks.splice(index, 1);
+        newBlocks.splice(index - 1, 0, block);
+        self.blocks.replace(newBlocks);
+        self.onChange();
+      }
+    },
+    moveDown(index) {
+      if (index < self.blocks.length - 1) {
+        const block = self.blocks[index];
+        const newBlocks = self.blocks.slice();
+        newBlocks.splice(index, 1);
+        newBlocks.splice(index + 1, 0, block);
+        self.blocks.replace(newBlocks);
+        self.onChange();
+      }
+    },
     setValue(value) {
       if (self.from_name.valueType === "addressmanager") {
         self.value.addressmanager = value.map(block =>
@@ -82,9 +126,7 @@ const Model = types
       self.blocks[index] = self.blocks[index].updateField(field, value);
     },
     updateFromResult(value) {
-      console.log("value", value);
       const newBlocks = value.map(blockData => {
-        console.log("blockData", blockData);
         const addressData = {
           street: blockData.street || "",
           unit: blockData.unit || "",
@@ -95,10 +137,9 @@ const Model = types
           county: blockData.county || "",
           country: blockData.country || ""
         };
-
         return AddressBlock.create(addressData);
       });
-      console.log(newBlocks);
+      
       self.blocks.replace(newBlocks);
     },
     needsUpdate() {
@@ -109,15 +150,8 @@ const Model = types
         self.requiredmessage || `Input for the "${self.name}" is required.`
       );
     },
-    deserializeResults(json) {
-      console.log("deserializing Results");
-      console.log(json);
-    },
-    afterResultCreated(area) {},
     updateResult() {
       if (self.result) {
-        console.log("self", self);
-        console.log("selfResult", self.result);
         self.result.setValue(self.serializableValue);
       } else {
         self.annotation.createResult(
@@ -143,12 +177,11 @@ const AddressManagerModel = types.compose(
 );
 
 const HtxAddressManager = observer(({ item }) => {
-  console.log(item);
   return (
     <Block name="address-manager">
       <Elem name="controls">
         <Elem name="button" onClick={() => item.addBlock()}>
-          Add Block
+          Add additional address
         </Elem>
         <Elem name="button" onClick={() => item.removeLastBlock()}>
           Remove Last Block
@@ -157,56 +190,34 @@ const HtxAddressManager = observer(({ item }) => {
       <Elem name="blocks">
         {item.blocks.map((block, index) => (
           <Elem key={index} name="block">
-            <Input
-              placeholder="Street or Intersection"
-              name={`street_${index + 1}`}
-              value={block.street}
-              onChange={e => item.updateBlock(index, "street", e.target.value)}
+            <Elem name="move-buttons-container">
+              <Elem name="move-button" onClick={() => item.moveUp(index)}>
+                UP
+              </Elem>
+              <Elem name="move-button" onClick={() => item.moveDown(index)}>
+                DOWN
+              </Elem>
+            </Elem>
+            <AddressInput
+              item={item}
+              index={index}
+              block={block}
+              isReadonly={false}
             />
-            <Input
-              placeholder="Unit"
-              name={`unit_${index + 1}`}
-              value={block.unit}
-              onChange={e => item.updateBlock(index, "unit", e.target.value)}
-            />
-            <Input
-              placeholder="City"
-              name={`city_${index + 1}`}
-              value={block.city}
-              onChange={e => item.updateBlock(index, "city", e.target.value)}
-            />
-            <Input
-              placeholder="Place Name"
-              name={`place_name_${index + 1}`}
-              value={block.placeName}
-              onChange={e =>
-                item.updateBlock(index, "placeName", e.target.value)
-              }
-            />
-            <Input
-              placeholder="State"
-              name={`state_${index + 1}`}
-              value={block.state}
-              onChange={e => item.updateBlock(index, "state", e.target.value)}
-            />
-            <Input
-              placeholder="Zip"
-              name={`zip_${index + 1}`}
-              value={block.zip}
-              onChange={e => item.updateBlock(index, "zip", e.target.value)}
-            />
-            <Input
-              placeholder="County"
-              name={`county_${index + 1}`}
-              value={block.county}
-              onChange={e => item.updateBlock(index, "county", e.target.value)}
-            />
-            <Input
-              placeholder="Country"
-              name={`country_${index + 1}`}
-              value={block.country}
-              onChange={e => item.updateBlock(index, "country", e.target.value)}
-            />
+            <Elem name="control-buttons-container">
+              <Elem
+                name="control-button"
+                onClick={() => item.removeBlock(index)}
+              >
+                DELETE
+              </Elem>
+              <Elem
+                name="control-button"
+                onClick={() => item.duplicateBlock(index)}
+              >
+                DUPLICATE
+              </Elem>
+            </Elem>
           </Elem>
         ))}
       </Elem>
