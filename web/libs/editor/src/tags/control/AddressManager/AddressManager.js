@@ -51,7 +51,7 @@ const Model = types
   })
   .views(self => ({
     get serializableValue() {
-      if (!self.blocks.length) return null;
+      if (!self.blocks.length) return [];
       return self.blocks.map(block => block.toJSON());
     },
     selectedValues() {
@@ -62,12 +62,6 @@ const Model = types
     addBlock() {
       self.blocks.push(AddressBlock.create());
       self.updateResult();
-    },
-    removeLastBlock() {
-      if (self.blocks.length > 0) {
-        const lastBlock = self.blocks.pop();
-        destroy(lastBlock);
-      }
     },
     removeBlock(index) {
       if (self.blocks.length > 0) {
@@ -139,16 +133,18 @@ const Model = types
         };
         return AddressBlock.create(addressData);
       });
-      
+
       self.blocks.replace(newBlocks);
     },
     needsUpdate() {
       self.updateFromResult(self.result?.mainValue ?? []);
     },
-    requiredModal() {
-      InfoModal.warning(
-        self.requiredmessage || `Input for the "${self.name}" is required.`
+    beforeSend() {
+      // remove empty blocks
+      self.blocks = self.blocks.filter(block =>
+        Object.values(block).some(value => value)
       );
+      self.updateResult();
     },
     updateResult() {
       if (self.result) {
@@ -182,9 +178,6 @@ const HtxAddressManager = observer(({ item }) => {
       <Elem name="controls">
         <Elem name="button" onClick={() => item.addBlock()}>
           Add additional address
-        </Elem>
-        <Elem name="button" onClick={() => item.removeLastBlock()}>
-          Remove Last Block
         </Elem>
       </Elem>
       <Elem name="blocks">
