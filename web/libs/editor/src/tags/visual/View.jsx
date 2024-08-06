@@ -95,6 +95,7 @@ const Model = types.model({
     "videorectangle",
     "ranker",
     "addressmanager",
+    "addresstable"
   ])
 });
 

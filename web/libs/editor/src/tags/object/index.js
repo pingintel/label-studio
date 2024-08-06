@@ -7,6 +7,7 @@ import { TimeSeriesModel } from "./TimeSeries";
 import { PagedViewModel } from "./PagedView";
 import { VideoModel } from "./Video";
 import { ListModel } from "./List";
+import { AddressTableModel } from "./AddressTable";
 
 // stub files to keep docs of these tags
 import "./HyperText";
@@ -20,6 +21,7 @@ export {
   RichTextModel,
   VideoModel,
   TableModel,
+  AddressTableModel,
   PagedViewModel,
   ListModel,
 };

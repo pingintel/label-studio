@@ -3,30 +3,33 @@ import { Table } from "antd";
 import { inject, observer } from "mobx-react";
 import { flow, getEnv, types } from "mobx-state-tree";
 import Papa from "papaparse";
-
+import { Block, Elem } from "../../utils/bem";
 import { errorBuilder } from "../../core/DataValidator/ConfigValidator";
 import Registry from "../../core/Registry";
 import { AnnotationMixin } from "../../mixins/AnnotationMixin";
 import ProcessAttrsMixin from "../../mixins/ProcessAttrs";
 import Base from "./Base";
 import { parseTypeAndOption, parseValue } from "../../utils/data";
+import { InstructionsModal } from "../../components/InstructionsModal/InstructionsModal";
+import { AddressExamples } from "libs/editor/src/components/AddressExamples/AddressExamples";
+import FAQButton from "/libs/editor/src/components/AddressExamples/FAQButton";
 
 /**
- * The `Table` tag is used to display object keys and values in a table.
+ * The `AddressTasble` tag is used to display object keys and values in a table. Customized version of the Table tag for displaying address information.
  * @example
  * <!-- Basic labeling configuration for text in a table -->
  * <View>
- *   <Table name="text-1" value="$text"></Table>
+ *   <Address name="text-1" value="$text"></Address>
  * </View>
- * @name Table
- * @meta_title Table Tag to Display Keys & Values in Tables
+ * @name AddressTable
+ * @meta_title Address Tag to Display Keys & Values in Tables and Copy Address
  * @meta_description Customize Label Studio by displaying key-value pairs in tasks for machine learning and data science projects.
  * @param {string} value Data field value containing JSON type for Table
  * @param {string} [valueType] Value to define the data type in Table
  */
 const Model = types
   .model({
-    type: "table",
+    type: "addresstable",
     value: types.maybeNull(types.string),
     _value: types.frozen([]),
     valuetype: types.optional(types.string, "json")
@@ -56,6 +59,7 @@ const Model = types
           { title: "Value", dataIndex: "value" }
         ];
       }
+
       return Object.keys(self._value[0]).map(value => ({
         title: value,
         dataIndex: value
@@ -109,28 +113,97 @@ const Model = types
     })
   }));
 
-const TableModel = types.compose(
-  "TableModel",
+const AddressTableModel = types.compose(
+  "AddressTableModel",
   Base,
   ProcessAttrsMixin,
   AnnotationMixin,
   Model
 );
 
-const HtxTable = inject("store")(
+const HtxAddressTable = inject("store")(
   observer(({ item }) => {
+    const [modal, setModal] = React.useState(false);
+    console.log("dataSource", item);
+
+    const handleCellClick = text => {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          message.success(`Copied: ${text}`);
+        })
+        .catch(err => {
+          message.error("Failed to copy!");
+          console.error("Could not copy text: ", err);
+        });
+    };
+
+    const columns = item.columns.map(col => ({
+      ...col,
+      render: text => {
+        const isTitle = col.title === "Name";
+        const pointerStyle = isTitle ? "default" : "pointer";
+        const fontWeight = isTitle ? "normal" : "bold";
+
+        return (
+          <span
+            onClick={() => {
+              if (!isTitle) {
+                handleCellClick(text);
+              }
+            }}
+            style={{
+              cursor: pointerStyle,
+              textDecoration: "none",
+              fontWeight: fontWeight,
+              textTransform: "uppercase"
+            }}
+            onMouseEnter={e => {
+              if (!isTitle) {
+                e.target.style.textDecoration = "underline";
+                e.target.style.color = "var(--grape_500)";
+              }
+            }}
+            onMouseLeave={e => {
+              if (!isTitle) {
+                e.target.style.textDecoration = "none";
+                e.target.style.backgroundColor = "transparent";
+                e.target.style.color = "black";
+              }
+            }}
+          >
+            {text}
+          </span>
+        );
+      }
+    }));
+
     return (
-      <Table
-        bordered
-        dataSource={item.dataSource}
-        columns={item.columns}
-        pagination={{ hideOnSinglePage: true }}
-      />
+      <>
+        <Elem name="button" onClick={() => setModal(true)}>
+          <FAQButton />
+        </Elem>
+        {modal && (
+          <InstructionsModal
+            title="FAQ"
+            visible={modal}
+            onCancel={() => setModal(false)}
+          >
+            <AddressExamples />
+          </InstructionsModal>
+        )}
+        <Table
+          bordered
+          dataSource={item.dataSource}
+          columns={columns}
+          pagination={{ hideOnSinglePage: true }}
+        />
+      </>
     );
   })
 );
 
-Registry.addTag("table", TableModel, HtxTable);
-Registry.addObjectType(TableModel);
+Registry.addTag("addresstable", AddressTableModel, HtxAddressTable);
+Registry.addObjectType(AddressTableModel);
 
-export { HtxTable, TableModel };
+export { HtxAddressTable, AddressTableModel };
