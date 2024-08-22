@@ -5,6 +5,13 @@
 Welcome to the Ping Data Intelligence Label Studio fork.
 This folder has all the required scripts to build, push and commit frontend changes and create a docker image to be pushed to ECR.
 
+## Examples
+
+```
+$version=x.x.x
+python infra/build_image.py -p -i $version
+```
+
 ## build_frontend
 
 To build the frontend you can run `python infra/build_frontend.py` in the root folder. This runs the yarn run build command to create frontend static files.
