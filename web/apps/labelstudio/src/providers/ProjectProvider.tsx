@@ -91,7 +91,7 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
       setProjectData({});
     }
     fetchProject();
-  }, [params, fetchProject]);
+  }, [params]);
 
   useEffect(() => {
     return () => projectCache.clear();
