@@ -4,6 +4,7 @@ import { shallowEqualObjects } from "shallow-equal";
 import { useAPI, type WrappedResponse } from "./ApiProvider";
 import { useAppStore } from "./AppStoreProvider";
 import { useParams } from "./RoutesProvider";
+import { useHistory } from "react-router";
 
 type Empty = Record<string, never>;
 
@@ -23,15 +24,19 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
   const api = useAPI();
   const params = useParams();
   const { update: updateStore } = useAppStore();
+  const history = useHistory();
+  const [isLoading, setIsLoading] = useState(false);
   // @todo use null for missed project data
   const [projectData, setProjectData] = useState<APIProject | Empty>(projectCache.get(+params.id) ?? {});
 
   const fetchProject: Context["fetchProject"] = useCallback(
     async (id, force = false) => {
       const finalProjectId = +(id ?? params.id);
-
-      if (isNaN(finalProjectId)) return;
-
+      if (isLoading) return;
+      
+      if (isNaN(finalProjectId)) {return};
+      setIsLoading(true);
+      
       if (!force && projectCache.has(finalProjectId) && projectCache.get(finalProjectId) !== undefined) {
         setProjectData({ ...projectCache.get(finalProjectId)! });
       }
@@ -41,6 +46,13 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
         errorFilter: () => false,
       });
 
+      if(result === null){
+        setProjectData({});
+        history.push("/projects");
+        setIsLoading(false);
+        return;
+      }
+
       const projectInfo = result as unknown as APIProject;
 
       if (shallowEqualObjects(projectData, projectInfo) === false) {
@@ -49,6 +61,7 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
         projectCache.set(projectInfo.id, projectInfo);
       }
 
+      setIsLoading(false);
       return projectInfo;
     },
     [params],
@@ -78,7 +91,7 @@ export const ProjectProvider: React.FunctionComponent = ({ children }) => {
       setProjectData({});
     }
     fetchProject();
-  }, [params]);
+  }, [params, fetchProject]);
 
   useEffect(() => {
     return () => projectCache.clear();
