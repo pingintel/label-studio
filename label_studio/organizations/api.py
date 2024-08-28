@@ -7,11 +7,13 @@ from core.mixins import GetParentObjectMixin
 from core.utils.common import load_func
 from django.conf import settings
 from django.urls import reverse
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from khan.rbac.models import UserRole
 from khan.rbac.roles import Role
+from projects.models import Project, ProjectMember
 from organizations.models import Organization, OrganizationMember
 from organizations.serializers import (
     OrganizationIdSerializer,
@@ -246,9 +248,34 @@ class OrganizationMemberPermissionUpdateAPI(GetParentObjectMixin, generics.Updat
         except (ValueError, TypeError):
             return Response({'detail': 'Invalid role provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        current_role = user_role.role
 
-        user_role.role = new_role
-        user_role.save()
+        with transaction.atomic():
+            # If the current role is labeler and it is getting upgraded, add them to every project or enable existing entries
+            if current_role == Role.LABELER and new_role > Role.LABELER:
+                projects = Project.objects.all()
+                for project in projects:
+                    project_member, created = ProjectMember.objects.get_or_create(
+                        project=project,
+                        user=user,
+                        defaults={'enabled': True}
+                    )
+                    if not created and not project_member.enabled:
+                        project_member.enabled = True
+                        project_member.save()
+
+            # If the current role is COORDINATOR and they are getting upgraded or if they are INFRA and getting downgraded into COORDINATOR, don't do anything
+            elif (current_role == Role.LABELING_COORDINATOR and new_role > Role.LABELING_COORDINATOR) or \
+                 (current_role == Role.LABELING_INFRA and new_role == Role.LABELING_COORDINATOR):
+                pass
+
+            # If the current role is COORDINATOR or INFRA and they get switched to LABELER, remove them from every project
+            elif (current_role in [Role.LABELING_COORDINATOR, Role.LABELING_INFRA]) and new_role == Role.LABELER:
+                ProjectMember.objects.filter(user=user).delete()
+
+            # Update the user's role
+            user_role.role = new_role
+            user_role.save()
 
         return Response(status=200)
 
