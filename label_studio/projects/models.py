@@ -1436,6 +1436,8 @@ def create_project_member(sender, instance, **kwargs):
     from organizations.models import OrganizationMember
     from users.models import User
     from projects.models import ProjectMember
+    from khan.rbac.models import UserRole
+    from khan.rbac.roles import Role
 
     project = instance
     
@@ -1448,7 +1450,10 @@ def create_project_member(sender, instance, **kwargs):
             project_members = []
             for user in org_users:
                 if user.id not in existing_members:
-                    enabled = user.id == project.created_by.id
+                    user_role = UserRole.objects.filter(user=user).first()
+                    
+                    enabled = (user.id == project.created_by.id or 
+                               (user_role and user_role.role in [Role.LABELING_COORDINATOR, Role.LABELING_INFRA]))
                     project_members.append(ProjectMember(user=user, project=project, enabled=enabled))
             
             if project_members:
