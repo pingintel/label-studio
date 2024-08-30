@@ -26919,6 +26919,9 @@ body {
   --primary_link: #566fcf;
   --danger_color: var(--red_7);
 }
+.lsf-address-manager {
+  margin-top: 10px;
+}
 .lsf-address-manager__controls {
   display: flex;
   margin-bottom: 10px;
@@ -26938,10 +26941,152 @@ body {
   flex-direction: column;
 }
 .lsf-address-manager__block {
-  padding: 5px;
+  padding: 2px;
   margin-bottom: 5px;
   background-color: #f9f9f9;
+  height: 80px;
   border: 1px solid #ddd;
+  display: flex;
+}
+.lsf-address-manager__move-buttons-container {
+  display: flex;
+  height: max;
+  gap: 2px;
+}
+.lsf-address-manager__move-button {
+  width: 100px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.lsf-address-manager__move-button:hover {
+  background-color: #e0e0e0;
+}
+.lsf-address-manager__control-buttons-container {
+  display: flex;
+  flex-direction: column;
+  width: 15%;
+  height: max;
+  gap: 2px;
+}
+.lsf-address-manager__control-button {
+  width: max;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.lsf-address-manager__control-button:hover {
+  background-color: #e0e0e0;
+}
+.lsf-address-manager__address-inputs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+  width: 55vw;
+}
+.lsf-address-manager__address-row {
+  display: flex;
+  gap: 2px;
+  height: 50%;
+}
+.lsf-address-manager__input-container-state-input {
+  position: relative;
+  width: 20%;
+}
+.lsf-address-manager__input-container-state-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-country-input {
+  position: relative;
+  width: 40%;
+}
+.lsf-address-manager__input-container-country-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-street-input {
+  position: relative;
+  width: 35%;
+}
+.lsf-address-manager__input-container-street-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-unit-input {
+  position: relative;
+  width: 15%;
+}
+.lsf-address-manager__input-container-unit-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-city-input {
+  position: relative;
+  width: 20%;
+}
+.lsf-address-manager__input-container-city-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-place-name-input {
+  position: relative;
+  width: 30%;
+}
+.lsf-address-manager__input-container-place-name-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-zip-input {
+  position: relative;
+  width: 15%;
+}
+.lsf-address-manager__input-container-zip-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__input-container-county-input {
+  position: relative;
+  width: 25%;
+}
+.lsf-address-manager__input-container-county-input input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+.lsf-address-manager__info {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  padding: 1px 2px;
+  font-size: 10px;
+  color: #fff;
+  background-color: var(--grape_700);
 }
 
 .progress--msYWR {
@@ -32551,6 +32696,101 @@ body {
   flex-direction: column;
   align-items: stretch;
 }
+.copySpan {
+  cursor: pointer;
+  transition: font-weight 0.3s ease, -webkit-text-decoration 0.3s ease;
+  transition: font-weight 0.3s ease, text-decoration 0.3s ease;
+  transition: font-weight 0.3s ease, text-decoration 0.3s ease, -webkit-text-decoration 0.3s ease;
+}
+
+.copySpan:hover {
+  font-weight: bold;
+  /* text underline */
+  text-decoration: underline;
+  background: #f0f0f0;
+  color: black;
+}
+
+.head {
+  background-color: #cecece;
+  font-weight: bold;
+  text-align: center;
+}
+
+.notes > td {
+  border-bottom: 2px solid black;
+  text-align: center;
+}
+
+.notes p {
+  margin: 0 0 3px 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 20px;
+  border: 1px dotted black;
+  border-radius: 5px;
+}
+
+.format-examples th {
+  border: 1px solid white;
+}
+
+.format-examples th.head.small {
+  word-wrap: break-word;
+  max-width: 150px;
+}
+
+.format-examples td {
+  padding: 2px 10px;
+}
+
+.format-examples {
+  border-collapse: collapse;
+}
+
+.format-examples tr:nth-child(2n of :not(.notes)) {
+  background: rgb(240, 240, 240);
+}
+
+.format-examples tr:nth-child(2n of .notes) {
+  background: rgb(240, 240, 240);
+}
+
+.notes {
+  font-size: 0.75em;
+}
+
+.outputs {
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.outputs > li {
+  margin: 0 0 15px 0;
+}
+
+.output-title {
+  padding-top: 1em;
+}
+
+.faq-button-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--grape_700);
+
+  span {
+    font-size: 26px;
+  }
+
+  &:hover {
+    color: var(--grape_500);
+  }
+}
+
 @font-face {
   font-family: "Figtree";
   src: url("/static/fonts/Figtree-Regular.ttf") format("truetype");
