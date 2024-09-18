@@ -170,7 +170,8 @@ DATABASES_ALL = {
     },
 }
 DATABASES_ALL['default'] = DATABASES_ALL[DJANGO_DB_POSTGRESQL]
-DATABASES = {'default': DATABASES_ALL.get(get_env('DJANGO_DB', 'default'))}
+DATABASES = {'default': DATABASES_ALL[DJANGO_DB_POSTGRESQL]}
+
 # print(DATABASES)
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
@@ -224,6 +225,8 @@ INSTALLED_APPS = [
     'labels_manager',
     'ml_models',
     'ml_model_providers',
+    "khan",
+    "khan.rbac"
 ]
 
 MIDDLEWARE = [
@@ -243,6 +246,9 @@ MIDDLEWARE = [
     'core.middleware.ContextLogMiddleware',
     'core.middleware.DatabaseIsLockedRetryMiddleware',
     'core.current_request.ThreadLocalMiddleware',
+    'khan.iap.middleware.IAPUserMiddleware',
+    'organizations.middleware.DummyGetSessionMiddleware',
+    'core.middleware.UpdateLastActivityMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -250,6 +256,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'khan.rbac.permission.RBACPermissionClass',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'core.api_permissions.HasObjectPermission',
@@ -287,7 +294,8 @@ AUTHENTICATION_BACKENDS = [
 ]
 USE_USERNAME_FOR_LOGIN = False
 
-DISABLE_SIGNUP_WITHOUT_LINK = get_bool_env('DISABLE_SIGNUP_WITHOUT_LINK', False)
+DISABLE_SIGNUP_WITHOUT_LINK = False
+IAP_AUDIENCE = get_env("IAP_AUDIENCE")
 
 # Password validation:
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -320,31 +328,8 @@ TEMPLATES = [
 
 # RQ
 RQ_QUEUES = {
-    'critical': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 180,
-    },
-    'high': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 180,
-    },
-    'default': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 180,
-    },
-    'low': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 180,
-    },
 }
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 # specify the list of the extensions that are allowed to be presented in auto generated OpenAPI schema
 # for example, by specifying in swagger_auto_schema(..., x_fern_sdk_group_name='projects') we can group endpoints
@@ -621,7 +606,8 @@ FEATURE_FLAGS_OFFLINE = get_bool_env('FEATURE_FLAGS_OFFLINE', True)
 FEATURE_FLAGS_DEFAULT_VALUE = False
 
 # Whether to send analytics telemetry data. Fall back to old lowercase name for legacy compatibility.
-COLLECT_ANALYTICS = get_bool_env('COLLECT_ANALYTICS', get_bool_env('collect_analytics', True))
+COLLECT_ANALYTICS = False
+STORAGE_PERSISTENCE = get_bool_env('STORAGE_PERSISTENCE', True)
 
 # Strip harmful content from SVG files by default
 SVG_SECURITY_CLEANUP = get_bool_env('SVG_SECURITY_CLEANUP', False)
@@ -753,6 +739,12 @@ CLOUD_STORAGE_CHECK_FOR_RECORDS_TIMEOUT = get_env('CLOUD_STORAGE_CHECK_FOR_RECOR
 CONTEXTLOG_SYNC = False
 TEST_ENVIRONMENT = get_bool_env('TEST_ENVIRONMENT', False)
 DEBUG_CONTEXTLOG = get_bool_env('DEBUG_CONTEXTLOG', False)
+
+if INACTIVITY_SESSION_TIMEOUT_ENABLED:
+    MIDDLEWARE.append('core.middleware.InactivitySessionTimeoutMiddleWare')
+
+ADD_DEFAULT_ML_BACKENDS = False
+
 
 _REDIS_SSL_CERTS_REQS = get_env('REDIS_SSL_CERTS_REQS', 'required')
 REDIS_SSL_SETTINGS = {

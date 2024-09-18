@@ -5,7 +5,8 @@ import os
 import sys
 
 if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'khan.settings.prod')
+    # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'khan.settings.prod')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.label_studio')
     # os.environ.setdefault('DEBUG', 'True')
     try:
         from django.conf import settings
