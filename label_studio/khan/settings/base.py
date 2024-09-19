@@ -6,11 +6,6 @@ from core.utils.secret_key import generate_secret_key_if_missing
 
 SECRET_KEY = generate_secret_key_if_missing(BASE_DATA_DIR)
 
-# Make sure our custom django app is installed
-INSTALLED_APPS.extend([
-    "khan",
-    "khan.rbac"
-])
 
 # Add our Rules Permissions Class to drf permissions classes so our
 # custom RBAC works
