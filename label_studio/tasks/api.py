@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import no_body, swagger_auto_schema
+from khan.rbac.models import UserRole
 from projects.functions.stream_history import fill_history_annotation
 from projects.models import Project
 from rest_framework import generics, viewsets
@@ -305,7 +306,16 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer_class()(
             self.task, many=False, context=context, expand=['annotations.completed_by']
         )
+        user_role = UserRole.objects.get(user=request.user).role
+        
         data = serializer.data
+
+        if user_role <= 1:
+            data['annotations'] = [
+                annotation for annotation in data['annotations']
+                if annotation['completed_by']['id'] == self.request.user.id
+            ]
+
         return Response(data)
 
     def get_queryset(self):
